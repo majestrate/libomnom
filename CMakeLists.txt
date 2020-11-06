@@ -20,8 +20,12 @@ configure_file(entsync/version.hpp.in entsync/version.hpp @ONLY)
 configure_file(libentsync.pc.in libentsync.pc @ONLY)
 
 add_library(entsync
+  entsync/context.cpp
   entsync/entity.cpp
   entsync/gossip.cpp
+  entsync/handler.cpp
+  entsync/peer_manager.cpp
+  entsync/searcher.cpp
 )
 
 set_target_properties(entsync PROPERTIES SOVERSION ${ENTSYNC_LIBVERSION})
