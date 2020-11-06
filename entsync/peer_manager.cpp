@@ -122,7 +122,7 @@ namespace entsync
   {
     const auto itr = m_ConnectBackoff.find(addr);
     if(itr == m_ConnectBackoff.end())
-      return not ShouldLimit(addr);
+      return m_Connections[addr] == 0;
     return itr->second.first + itr->second.second <= time::Now();
   }
 
@@ -137,11 +137,11 @@ namespace entsync
   void
   PeerManager::HandleRegisterConn(lokimq::Message & msg)
   {
-    if(m_Limiter.ShouldLimit(msg.remote))
-    {
-      throw too_many_connections{"too many connections to "+msg.remote};
-    }
     PeerInfo info{lokimq::bt_get(msg.data.at(0))};
+    if(HasConnectionToPeer(info))
+    {
+      throw too_many_connections{"we already have a connection to this node"};
+    }
     RegisterPeer(msg.conn, std::move(info));
     msg.send_reply(lokimq::bt_serialize(m_OurInfo.to_bt_value()));
   }
@@ -149,6 +149,10 @@ namespace entsync
   void
   PeerManager::RegisterPeer(lokimq::ConnectionID conn, PeerInfo info)
   {
+    for(const auto & peeraddr : info.addrs)
+    {
+      m_Limiter.MarkConnectSuccess(peeraddr.addr);
+    }
     PeerState & state = m_Peers[conn];
     state.peerInfo = std::move(info);
     state.lastKeepAlive = time::Now();
@@ -156,6 +160,17 @@ namespace entsync
   }
   
 
+  bool
+  PeerManager::HasConnectionToPeer(PeerInfo info) const
+  {
+    for(const auto & [_, peer] : m_Peers)
+    {
+      if(peer.peerInfo.uid == info.uid)
+        return true;
+    }
+    return false;
+  }
+  
   void
   PeerLimiter::MarkConnectFail(std::string addr)
   {

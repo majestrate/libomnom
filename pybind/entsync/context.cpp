@@ -30,15 +30,15 @@ namespace entsync
       .def("listen",
           [](PyContext & self, std::string peerAddr)
           {
-            PeerAddr ipcAddr;
-            ipcAddr.addr = peerAddr;
-            ipcAddr.rank = 1;
-            self.Listen(peerAddr, {ipcAddr});
+            PeerAddr addr;
+            addr.addr = peerAddr;
+            addr.rank = 1;
+            self.Listen(peerAddr, {addr});
           })
       .def("add_peer",
            [](PyContext & self, std::string addr)
            {
-             self.AddPersistingPeer(lokimq::address::ipc(addr));
+             self.AddPersistingPeer(lokimq::address{addr});
            })
       .def("start",
            [](PyContext & self)

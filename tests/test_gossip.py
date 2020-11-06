@@ -6,13 +6,15 @@ import time
 
 class Node:
 
+    baseport = 25000
+
     def __init__(self, node_id):
         self._ctx = pyentsync.Context("test")
-        self._sockfile = 'test-{}.sock'.format(node_id)
-        self._ctx.listen('ipc://{}'.format(self._sockfile))
+        self._addr = 'tcp://127.0.1.1:{}'.format(self.baseport + node_id)
+        self._ctx.listen(self._addr)
 
     def addr(self):
-        return self._sockfile
+        return self._addr
         
     def start(self):
         self._ctx.start()
@@ -20,11 +22,6 @@ class Node:
 
     def add_peer(self, addr):
         self._ctx.add_peer(addr)
-        
-    def __del__(self):
-        del self._ctx
-        if os.path.exists(self._sockfile):
-            os.unlink(self._sockfile)
 
         
 

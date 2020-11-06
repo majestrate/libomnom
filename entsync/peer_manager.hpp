@@ -124,6 +124,10 @@ namespace entsync
 
     void
     RegisterPeer(lokimq::ConnectionID conn, PeerInfo info);
+
+
+    bool
+    HasConnectionToPeer(PeerInfo info) const;
     
   public:
     explicit PeerManager(Context * ctx);
