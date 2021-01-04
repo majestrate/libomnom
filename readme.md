@@ -1,4 +1,4 @@
-# loki entity sync
+# entity sync
 
 p2p entity gossip layer atop lokimq
 
@@ -14,8 +14,8 @@ depends:
 
 clone the source (this is a recursive repo):
 
-    $ git clone --recursive https://github.com/loki-project/loki-entity-sync
-    $ cd loki-entity-sync
+    $ git clone --recursive https://github.com/majestrate/entity-sync
+    $ cd entity-sync
 
 compile as a library:
 
