@@ -80,6 +80,9 @@ namespace entsync
 
     std::vector<std::string>
     GetPeerAddresses() const;
+
+    void
+    ForEachPeer(std::function<void(PeerState peer, std::function<void(lokimq::bt_value)>sendMessage)> visit);
     
   };
 }

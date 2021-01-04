@@ -25,6 +25,7 @@ add_library(entsync
   entsync/gossip.cpp
   entsync/handler.cpp
   entsync/peer_manager.cpp
+  entsync/peer_limiter.cpp
   entsync/searcher.cpp
 )
 
@@ -58,9 +59,20 @@ install(
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/entsync/version.hpp
-  entsync/entsync.hpp
+  entsync/context.hpp
+  entsync/crypto_hash.hpp
+  entsync/entity.hpp
+  entsync/gossip.hpp
+  entsync/handler.hpp
+  entsync/logger.hpp
+  entsync/peer.hpp
+  entsync/peer_limiter.hpp
+  entsync/peer_manager.hpp
+  entsync/searcher.hpp
+  entsync/storage.hpp
+  entsync/time.hpp
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/entsync
-  )
+)
 
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/libentsync.pc

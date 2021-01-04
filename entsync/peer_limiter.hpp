@@ -1,4 +1,7 @@
 #pragma once
+#include "time.hpp"
+#include <string>
+#include <unordered_map>
 
 namespace entsync
 {
