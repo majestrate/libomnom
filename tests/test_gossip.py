@@ -1,6 +1,7 @@
 import pyentsync
 
 import os
+import random
 import time
 
 
@@ -11,6 +12,7 @@ class Node:
     def __init__(self, node_id):
         self._ctx = pyentsync.Context("test")
         self._addr = 'tcp://127.0.1.1:{}'.format(self.baseport + node_id)
+        self.node_id = node_id
         self._ctx.listen(self._addr)
 
     def addr(self):
@@ -23,19 +25,63 @@ class Node:
     def add_peer(self, addr):
         self._ctx.add_peer(addr)
 
-        
+    def peers(self):
+        return self._ctx.peers()
 
 
-def test_fullmesh():
+def makeNetGraph(nodes):
+    G = nx.Graph()
+    for node in nodes:
+        G.add_node(node.addr())
+        for peer in node.peers():
+            edge = node.addr(), peer
+            if edge not in G.edges:
+                G.add_edge(*edge)
+    return G
+
+
+def makeNetwork(numNodes):
     nodes = []
-    for n in range(30):
+    for n in range(numNodes):
         ctx = Node(n)
         ctx.start()
         nodes.append(ctx)
+    return nodes
 
-    for n in range(1, 30):
-        nodes[n].add_peer(nodes[n - 1].addr())
-        time.sleep(0.5)
+def randomlyConnect(nodes):
+    alice = random.choice(nodes)
+    bob = random.choice(nodes)
+    if alice.addr() != bob.addr():
+        alice.add_peer(bob.addr())
+    
+
+def runsim(numNodes=30):
+    nodes = makeNetwork(numNodes)
+
+    fig, ax = plt.subplots()
+
+    def animate(i):
+        if i % 5 == 1:
+            randomlyConnect(nodes)
+        fig.clear()
+        G = makeNetGraph(nodes)
+        if len(G.edges) == 0:
+            return
+        #pos = nx.kamada_kawai_layout(G)
+        pos = nx.circular_layout(G)
+        nx.draw_networkx_nodes(G, pos, node_size=700)
+        nx.draw_networkx_edges(G, pos)
+        nx.draw_networkx_labels(G, pos)
+    
+    ani = animation.FuncAnimation(fig, animate, interval=100)
+    ax = plt.gca()
+    ax.margins(0.08)
+    plt.axis("off")
+    plt.tight_layout()
+    plt.show()
         
 if __name__ == '__main__':
-    test_fullmesh()
+    import networkx as nx
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
+    runsim(50)

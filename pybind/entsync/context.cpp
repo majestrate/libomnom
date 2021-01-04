@@ -19,6 +19,12 @@ namespace entsync
         lmq{LogPrint, lokimq::LogLevel::info}
     {
     }
+
+    std::vector<std::string>
+    GetPeers() const
+    {
+      return m_Peers.GetPeerAddresses();
+    }
   };
 
   
@@ -46,6 +52,7 @@ namespace entsync
              self.Start();
              self.lmq.start();
            })
+      .def("peers", &PyContext::GetPeers)
       .def_readwrite("maxPeers", &PyContext::maxPeers)
       ;
   }

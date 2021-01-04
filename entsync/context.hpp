@@ -25,6 +25,7 @@ namespace entsync
     EntitySearcher m_Search;
     EntityHandler m_Handler;
     PeerManager m_Peers;
+    Gossiper m_Gossip;
         
   public:
     explicit Context(lokimq::LokiMQ & lmq, std::string dialect);
@@ -44,6 +45,11 @@ namespace entsync
     /// start the internal components
     void
     Start();
+
+
+    /// broadcast an entity to the network
+    void
+    Broadcast(Entity value);
     
 
     /// maximum number of allowed peers

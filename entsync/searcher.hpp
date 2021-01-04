@@ -19,11 +19,10 @@ namespace entsync
     template<typename Key_type>
     struct Bucket
     {
-      std::unordered_map<Key_type, std::function<void(std::optional<lokimq::bt_value>)>> m_PendingSearches;
+      std::unordered_map<Key_type, std::function<void(std::optional<Entity>)>> m_PendingSearches;
     };
-      
-    std::unordered_map<EntityKind, Bucket<uint64_t>>  m_EntitySearchesByInt;
-    std::unordered_map<EntityKind, Bucket<CryptoHash>>  m_EntitySearchesByHash;
+   
+    std::unordered_map<EntityKind, Bucket<EntityID>>  m_EntitySearches;
     
   public:
     explicit EntitySearcher(Context * ctx);
@@ -31,8 +30,9 @@ namespace entsync
     EntitySearcher(const EntitySearcher &) = delete;
     EntitySearcher(EntitySearcher &&) = delete;
 
+    /// obtain an entity of kind by id
     void
-    ObtainEntityByID(std::variant<uint64_t, CryptoHash> id, EntityKind kind, std::function<void(std::optional<lokimq::bt_value>)> handler);
+    ObtainByID(EntityKind kind, EntityID id, std::function<void(std::optional<Entity>)> handler);
     
   };
 }

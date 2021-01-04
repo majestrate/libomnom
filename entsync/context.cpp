@@ -9,7 +9,8 @@ namespace entsync
     m_LMQ{lmq},
     m_Search{this},
     m_Handler{this},
-    m_Peers{this}
+    m_Peers{this},
+    m_Gossip{&m_Peers}
   {
   }
 

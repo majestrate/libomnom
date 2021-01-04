@@ -7,6 +7,10 @@ namespace entsync
 {
   using namespace std::literals;
 
+  constexpr auto NACK = "NACK";
+  constexpr auto OK = "OKAY";
+
+  
   PeerInfo::PeerInfo(lokimq::bt_value val)
   {
     if(const auto dict = std::get_if<lokimq::bt_dict>(&val))
@@ -82,32 +86,23 @@ namespace entsync
   }
   
   PeerManager::PeerManager(Context * ctx) :
-    _ctx{ctx},
-    m_Logic{lokimq::LokiMQ::run_in_proxy}
+    _ctx{ctx}
   {
   }
 
   void
   PeerManager::Start()
   {
+    m_Logic = _ctx->lmq().add_tagged_thread("pm-logic");
     randombytes(m_OurInfo.uid.data(), m_OurInfo.uid.size());
-    m_Logic = _ctx->lmq().add_tagged_thread("peer-manager-logic");
     _ctx->AddRequestHandler(
       "register_conn",
-      [&](lokimq::Message & msg)
-      {
-        CallSafe([&]() {
-          try
-          {
-            HandleRegisterConn(msg);
-          }
-          catch(std::exception & ex)
-          {
-            LogInfo(_ctx, "failed to handle register_conn message: ", ex.what());
-            _ctx->lmq().disconnect(msg.conn);
-          }
-        });
-      });
+      [&](lokimq::Message & msg) { HandleRegisterConn(msg); });
+    
+    _ctx->AddRequestHandler(
+      "list_peers",
+      [&](lokimq::Message & msg) { HandleListPeers(msg); });
+      
     _ctx->lmq().add_timer([&]() { Tick(); }, 100ms, true, m_Logic);
   }
   
@@ -122,8 +117,8 @@ namespace entsync
   {
     const auto itr = m_ConnectBackoff.find(addr);
     if(itr == m_ConnectBackoff.end())
-      return m_Connections[addr] == 0;
-    return itr->second.first + itr->second.second <= time::Now();
+      return true;
+    return itr->second.first + itr->second.second >= time::Now();
   }
 
 
@@ -137,13 +132,51 @@ namespace entsync
   void
   PeerManager::HandleRegisterConn(lokimq::Message & msg)
   {
-    PeerInfo info{lokimq::bt_get(msg.data.at(0))};
-    if(HasConnectionToPeer(info))
+    PeerInfo info;
+    try
     {
-      throw too_many_connections{"we already have a connection to this node"};
+      info = PeerInfo{lokimq::bt_get(msg.data.at(0))};
     }
-    RegisterPeer(msg.conn, std::move(info));
-    msg.send_reply(lokimq::bt_serialize(m_OurInfo.to_bt_value()));
+    catch(std::exception & ex)
+    {
+      LogInfo(_ctx, "failed to parse peer info ", ex.what());
+      msg.send_reply(NACK, ex.what());
+      return;
+    }
+    std::promise<std::optional<lokimq::bt_value>> reply;
+    CallSafe([&, info=std::move(info), conn=msg.conn]() {
+      try
+      {
+        if(HasConnectionToPeer(info))
+        {
+          reply.set_value(std::nullopt);
+        }
+        RegisterPeer(conn, std::move(info));
+        reply.set_value(std::optional<lokimq::bt_value>{m_OurInfo.to_bt_value()});
+      }
+      catch(std::exception & ex)
+      {
+        LogInfo(_ctx, "failed to handle register_conn message: ", ex.what());
+        reply.set_exception(std::current_exception());
+      }
+    });
+    try
+    {
+      auto ftr =  reply.get_future();
+      const auto maybe = ftr.get();
+      if(maybe.has_value())
+      {
+        msg.send_reply(OK, lokimq::bt_serialize(*maybe));
+      }
+      else
+      {
+        msg.send_reply(NACK, "rejected");
+      }
+    }
+    catch(std::exception & ex)
+    {
+      msg.send_reply(NACK, ex.what());
+    }
   }
 
   void
@@ -170,6 +203,21 @@ namespace entsync
     }
     return false;
   }
+
+  bool
+  PeerManager::HasConnectionByAddress(std::string addr) const
+  {
+    for(const auto & [_, peer] : m_Peers)
+    {
+      for(const auto & peerAddr :peer.peerInfo.addrs)
+      {
+        if(addr == peerAddr.addr)
+          return true;
+      }
+    }
+    return false;
+
+  }
   
   void
   PeerLimiter::MarkConnectFail(std::string addr)
@@ -193,39 +241,59 @@ namespace entsync
   PeerLimiter::MarkConnectSuccess(std::string addr)
   {
     m_ConnectBackoff.erase(addr);
-    m_Connections[addr] += 1;
   }
   
   void
   PeerManager::OnNewOutboundPeer(lokimq::ConnectionID id, lokimq::address addr)
   {
-    m_Limiter.MarkConnectSuccess(addr.zmq_address());
-    m_Peers[id].outbound = true;
     /// send a register_conn command to tell the remote peer about our node
     _ctx->Request(
       id,
       "register_conn",
       [&, id=id, addr=addr.zmq_address()](bool success, std::vector<std::string> data)
       {
+        auto KillConnection = [&, id, addr]()
+        {
+          m_Peers.erase(id);
+          m_Limiter.MarkConnectFail(addr);
+          _ctx->lmq().disconnect(id);
+        };
         PeerInfo info;
-        try
+        if(success)
         {
-          info = PeerInfo{lokimq::bt_get(data.at(0))};
-        }
-        catch(std::exception & ex)
-        {
-          LogInfo(_ctx, "failed to parse PeerInfo: ", ex.what());
-          success = false;
-        }
-        CallSafe([&, success, info, id, addr]() {
-          if(not success)
+          if(data.at(0) == NACK)
           {
-            m_Peers.erase(id);
-            m_Limiter.MarkConnectFail(addr);
-            _ctx->lmq().disconnect(id);
+            CallSafe([&, KillConnection, reason=data.at(1)]()
+            {
+              LogInfo(_ctx, "remote peer rejected connection: ", reason);
+              KillConnection();
+            });
             return;
+          } 
+          try
+          {
+            info = PeerInfo{lokimq::bt_get(data.at(1))};
           }
-          RegisterPeer(id, info);
+          catch(std::exception & ex)
+          {
+            LogInfo(_ctx, "failed to parse PeerInfo: ", ex.what());
+            success = false;
+          }
+        }
+        CallSafe([&, success, info, id, addr, KillConnection]()
+        {
+          try
+          {
+            if(not success)
+              throw std::runtime_error{"failed to send message"};
+            RegisterPeer(id, info);
+            m_Limiter.MarkConnectSuccess(addr);
+          }
+          catch(std::exception & ex)
+          {
+            LogInfo(_ctx, "Failed to register connection: ", ex.what(), " addr=", addr);
+            KillConnection();
+          }
         });
       }, lokimq::bt_serialize(m_OurInfo.to_bt_value()));
   }
@@ -241,13 +309,33 @@ namespace entsync
     wait.get_future().get();
   }
 
+  std::vector<std::string>
+  PeerManager::GetPeerAddresses() const
+  {
+    std::vector<std::string> addrs;
+    std::promise<void> wait;
+    CallSafe([&]() {
+      for(const auto & [_, peer] : m_Peers)
+      {
+        for(const auto & addr : peer.peerInfo.addrs)
+          addrs.emplace_back(addr.addr);
+      }
+      wait.set_value();
+    });
+    wait.get_future().get();
+    return addrs;
+  }
+
+ 
   void
   PeerManager::Tick()
   {
     for(const auto & item : m_OutboundPeerAttempts)
     {
-      const auto & peerAddr = item.first;
-      const auto & persist = item.second;
+      const auto peerAddr = item.first;
+      const auto persist = item.second;
+      if(HasConnectionByAddress(peerAddr.zmq_address()))
+        continue;
       if(not m_Limiter.ShouldTryConnecting(peerAddr.zmq_address()))
         continue;
       _ctx->lmq().connect_remote(
@@ -255,7 +343,7 @@ namespace entsync
         [&, addr=peerAddr, persist](lokimq::ConnectionID conn)
         {
           LogInfo(_ctx, "connected to ", addr, " via ", conn);
-          CallSafe([&, conn]() {
+          CallSafe([&, conn, addr]() {
             OnNewOutboundPeer(conn, addr);
             m_Peers[conn].persist = persist;
           });
@@ -271,9 +359,9 @@ namespace entsync
   }
 
   void
-  PeerManager::CallSafe(std::function<void()> call)
+  PeerManager::CallSafe(std::function<void()> call) const
   {
-    _ctx->lmq().job(std::move(call), m_Logic);
+    _ctx->lmq().job(std::move(call), *m_Logic);
   }
   
 }
