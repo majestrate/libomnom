@@ -4,6 +4,7 @@ pybind11_add_module(pyentsync MODULE
   entsync/context.cpp
   entsync/entity.cpp
   entsync/gossip.cpp
+  entsync/storage.cpp
 )
 target_link_libraries(pyentsync PUBLIC entsync)
 target_include_directories(pyentsync PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})

@@ -111,6 +111,19 @@ namespace entsync
   {
     m_OurInfo.addrs.insert(std::move(addr));
   }
+
+  void
+  PeerManager::HandleListPeers(lokimq::Message & msg)
+  {
+    std::vector<lokimq::bt_value> peers{};
+    CallSafe([&]() {
+      for(const auto & info : m_Peers)
+      {
+        peers.emplace_back(info.second.peerInfo.to_bt_value());
+      }
+    });
+    msg.send_reply(OK, lokimq::bt_serialize(peers));
+  }
   
   void
   PeerManager::HandleRegisterConn(lokimq::Message & msg)

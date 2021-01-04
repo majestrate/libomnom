@@ -15,5 +15,7 @@ namespace entsync
   
   void
   Gossip_Init(py::module& mod);
-  
+
+  void
+  Storage_Init(py::module& mod);
 }
