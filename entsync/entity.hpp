@@ -16,6 +16,7 @@ namespace entsync
     
     EntityKind() = default;
     EntityKind(lokimq::bt_value val);
+    explicit EntityKind(std::string name, bool ephemeral);
     
     /// the name of this entity, must be distinct
     std::string name;
@@ -36,7 +37,7 @@ namespace entsync
     
     EntityID() = default;
     EntityID(lokimq::bt_value val);
-    
+    explicit EntityID(uint64_t index);
     /// either a blockchain height or a hash value
     std::variant<uint64_t, CryptoHash> ID;
 

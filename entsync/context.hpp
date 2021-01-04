@@ -11,6 +11,7 @@
 #include <future>
 #include <optional>
 #include <variant>
+#include "storage.hpp"
 
 namespace entsync
 {
@@ -26,7 +27,7 @@ namespace entsync
     EntityHandler m_Handler;
     PeerManager m_Peers;
     Gossiper m_Gossip;
-        
+    
   public:
     explicit Context(lokimq::LokiMQ & lmq, std::string dialect);
     /// non copyable
@@ -34,6 +35,9 @@ namespace entsync
     /// non movable
     Context(Context &&) = delete;
 
+    Gossiper &
+    Gossip() { return m_Gossip; };
+    
     /// add a listener to lokimq on lmqAddr to accept inbound connections
     /// advertise a set of reachable endpoints that it will publish if applicable in order of rank
     void
@@ -45,12 +49,6 @@ namespace entsync
     /// start the internal components
     void
     Start();
-
-
-    /// broadcast an entity to the network
-    void
-    Broadcast(Entity value);
-    
 
     /// maximum number of allowed peers
     int maxPeers = -1;
@@ -65,8 +63,19 @@ namespace entsync
       m_LMQ.request(std::move(id), call, std::move(callback), opts...);
     }
 
+    template<typename ...T>
+    void
+    Send(lokimq::ConnectionID id, std::string_view method, const T& ... opts)
+    {
+      const std::string call = m_Dialect + "." + std::string{method};
+      m_LMQ.send(std::move(id), call, opts...);
+    }
+
     void
     AddRequestHandler(std::string method, lokimq::LokiMQ::CommandCallback handler);
+
+    void
+    AddCommandHandler(std::string method, lokimq::LokiMQ::CommandCallback handler);
 
     
   };

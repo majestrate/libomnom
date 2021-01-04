@@ -102,10 +102,10 @@ namespace entsync
     _ctx->AddRequestHandler(
       "list_peers",
       [&](lokimq::Message & msg) { HandleListPeers(msg); });
-      
+    
     _ctx->lmq().add_timer([&]() { Tick(); }, 100ms, true, m_Logic);
   }
-  
+
   void
   PeerManager::AddReachableAddr(PeerAddr addr)
   {

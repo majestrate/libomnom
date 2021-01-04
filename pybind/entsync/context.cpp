@@ -14,7 +14,7 @@ namespace entsync
   public:
     lokimq::LokiMQ lmq;
 
-    PyContext(std::string dialect)
+    explicit PyContext(std::string dialect)
       : Context(lmq, std::move(dialect)),
         lmq{LogPrint, lokimq::LogLevel::info}
     {
@@ -25,6 +25,7 @@ namespace entsync
     {
       return m_Peers.GetPeerAddresses();
     }
+
   };
 
   
@@ -33,6 +34,11 @@ namespace entsync
   {
     py::class_<PyContext>(mod, "Context")
       .def(py::init<std::string>())
+      .def("broadcast_entity",
+           [](PyContext & self, Entity ent)
+           {
+             self.Gossip().Broadcast(std::move(ent));
+           })
       .def("listen",
           [](PyContext & self, std::string peerAddr)
           {

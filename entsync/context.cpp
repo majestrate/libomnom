@@ -19,6 +19,7 @@ namespace entsync
   {
     m_LMQ.add_category(m_Dialect, lokimq::Access{}, 1, 1024);
     m_Peers.Start();
+    m_Gossip.Start();
   }
   
   void
@@ -40,4 +41,10 @@ namespace entsync
   {
     m_LMQ.add_request_command(m_Dialect, std::move(method), std::move(handler));
   }
+
+  void
+  Context::AddCommandHandler(std::string method, lokimq::LokiMQ::CommandCallback handler)
+  {
+    m_LMQ.add_command(m_Dialect, std::move(method), std::move(handler));
+  }  
 }

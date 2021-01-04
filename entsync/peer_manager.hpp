@@ -45,9 +45,6 @@ namespace entsync
     Tick();
 
     void
-    CallSafe(std::function<void()> f) const;
-
-    void
     RegisterPeer(lokimq::ConnectionID conn, PeerInfo info);
 
 
@@ -61,6 +58,9 @@ namespace entsync
     explicit PeerManager(Context * ctx);
     PeerManager(const PeerManager&) = delete;
     PeerManager(PeerManager &&) = delete;
+
+    void
+    CallSafe(std::function<void()> f) const;
 
     /// setup and start peer manager
     void
@@ -81,8 +81,15 @@ namespace entsync
     std::vector<std::string>
     GetPeerAddresses() const;
 
+    template<typename Visit>
     void
-    ForEachPeer(std::function<void(PeerState peer, std::function<void(lokimq::bt_value)>sendMessage)> visit);
+    ForEachPeer(Visit visit)
+    {
+      for(const auto & [id, st] : m_Peers)
+        visit(id, st);
+    }
+
+    Context * GetContext() { return _ctx; };
     
   };
 }

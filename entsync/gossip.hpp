@@ -2,6 +2,7 @@
 
 #include "entity.hpp"
 #include "storage.hpp"
+#include <lokimq/lokimq.h>
 #include <memory>
 #include <functional>
 #include <unordered_map>
@@ -18,15 +19,26 @@ namespace entsync
     std::unordered_multimap<EntityKind, std::function<void(Entity)>> m_Handlers;
 
     std::unordered_map<EntityKind, std::unique_ptr<EntityStorage>> m_Storage;
+
+    std::optional<lokimq::TaggedThreadID> m_Logic;
+    
+    void
+    HandleGossip(lokimq::ConnectionID id, Entity ent);
     
   public:
     explicit Gossiper(PeerManager * peerManager);
     Gossiper(const Gossiper &) = delete;
     Gossiper(Gossiper &&) = delete;
 
+    void
+    Start();
+
+    void
+    CallSafe(std::function<void(void)> f) const;
+    
     /// broadcast an entity to the network
     void
-    Broadcast(Entity ent);
+    Broadcast(Entity ent, std::function<bool(lokimq::ConnectionID)> filter=nullptr);
 
     /// add a handler to handle new gossiped entities
     void
