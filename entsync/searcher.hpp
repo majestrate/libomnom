@@ -1,7 +1,7 @@
 #pragma once
 #include "crypto_hash.hpp"
 #include "entity.hpp"
-#include <lokimq/lokimq.h>
+#include <oxenmq/oxenmq.h>
 #include <future>
 #include <optional>
 #include <unordered_map>

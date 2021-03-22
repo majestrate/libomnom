@@ -32,8 +32,8 @@ add_library(entsync
 set_target_properties(entsync PROPERTIES SOVERSION ${ENTSYNC_LIBVERSION})
 
 include(FindPkgConfig)
-pkg_check_modules(lokimq REQUIRED liblokimq IMPORTED_TARGET)
-target_link_libraries(entsync PRIVATE lokimq)
+pkg_check_modules(oxenqmq REQUIRED liboxenmq IMPORTED_TARGET)
+target_link_libraries(entsync PRIVATE oxenmq)
 
 
 target_compile_options(entsync PRIVATE -Wall -Wextra -Werror)

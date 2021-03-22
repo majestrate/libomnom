@@ -1,7 +1,7 @@
 #pragma once
 #include "crypto_hash.hpp"
 #include "time.hpp"
-#include <lokimq/bt_serialize.h>
+#include <oxenmq/bt_serialize.h>
 #include <string>
 #include <set>
 
@@ -12,7 +12,7 @@ namespace entsync
   struct PeerAddr
   {
     PeerAddr() = default;
-    PeerAddr(lokimq::bt_value val);
+    PeerAddr(oxenmq::bt_value val);
     
     /// the advertised address in the form: protocol://address
     std::string addr;
@@ -22,7 +22,7 @@ namespace entsync
     bool operator < (const PeerAddr & other) const { return rank < other.rank;  };
 
 
-    lokimq::bt_value
+    oxenmq::bt_value
     to_bt_value() const;
     
   };
@@ -32,7 +32,7 @@ namespace entsync
   {
 
     PeerInfo() = default;
-    PeerInfo(lokimq::bt_value val);
+    PeerInfo(oxenmq::bt_value val);
     
     /// all reachable addresses if it has any
     std::set<PeerAddr> addrs;
@@ -40,7 +40,7 @@ namespace entsync
     /// picked at random
     CryptoHash uid;
 
-    lokimq::bt_value
+    oxenmq::bt_value
     to_bt_value() const;
   };
 

@@ -6,7 +6,7 @@
 #include "peer_limiter.hpp"
 #include "time.hpp"
 
-#include <lokimq/lokimq.h>
+#include <oxenmq/oxenmq.h>
 
 #include <unordered_map>
 
@@ -25,27 +25,27 @@ namespace entsync
   class PeerManager
   {
     Context * const _ctx;
-    std::optional<lokimq::TaggedThreadID> m_Logic;
+    std::optional<oxenmq::TaggedThreadID> m_Logic;
     PeerInfo m_OurInfo;
-    std::unordered_map<lokimq::ConnectionID, PeerState> m_Peers;
+    std::unordered_map<oxenmq::ConnectionID, PeerState> m_Peers;
     PeerLimiter m_Limiter;
     
-    std::vector<std::pair<lokimq::address, bool>> m_OutboundPeerAttempts;
+    std::vector<std::pair<oxenmq::address, bool>> m_OutboundPeerAttempts;
     
     void
-    OnNewOutboundPeer(lokimq::ConnectionID conn, lokimq::address addr);
+    OnNewOutboundPeer(oxenmq::ConnectionID conn, oxenmq::address addr);
 
     void
-    HandleRegisterConn(lokimq::Message & msg);
+    HandleRegisterConn(oxenmq::Message & msg);
 
     void
-    HandleListPeers(lokimq::Message & msg);
+    HandleListPeers(oxenmq::Message & msg);
     
     void
     Tick();
 
     void
-    RegisterPeer(lokimq::ConnectionID conn, PeerInfo info);
+    RegisterPeer(oxenmq::ConnectionID conn, PeerInfo info);
 
 
     bool
@@ -72,11 +72,11 @@ namespace entsync
 
     /// add a peer to bootstrap from
     void
-    AddBootstrapPeer(lokimq::address addr);
+    AddBootstrapPeer(oxenmq::address addr);
     
     /// add a forever connected peer
     void
-    AddPersistingPeer(lokimq::address addr);
+    AddPersistingPeer(oxenmq::address addr);
 
     std::vector<std::string>
     GetPeerAddresses() const;

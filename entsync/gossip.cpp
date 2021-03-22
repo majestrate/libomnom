@@ -13,9 +13,9 @@ namespace entsync
   {
     auto ctx = _peerManager->GetContext();
     m_Logic = ctx->lmq().add_tagged_thread("gossip-logic");
-    ctx->AddCommandHandler("gossip", [&](lokimq::Message & msg)
+    ctx->AddCommandHandler("gossip", [&](oxenmq::Message & msg)
     {
-      Entity ent{lokimq::bt_get(msg.data[0])};
+      Entity ent{oxenmq::bt_get(msg.data[0])};
       HandleGossip(msg.conn, ent);
     });
   }
@@ -27,9 +27,10 @@ namespace entsync
   }
 
   void
-  Gossiper::HandleGossip(lokimq::ConnectionID id, Entity ent)
+  Gossiper::HandleGossip(oxenmq::ConnectionID id, Entity ent)
   {
     CallSafe([&, ent]() {
+      // inform handlers 
       auto itr = m_Storage.find(ent.Kind);
       if(itr == m_Storage.end() or not itr->second->HasEntity(ent))
       {
@@ -40,16 +41,18 @@ namespace entsync
           item->second(ent);
           item++;
         }
+        if(itr != m_Storage.end())
+          itr->second->StoreEntity(std::move(ent));
       } 
     });
-    Broadcast(std::move(ent), [id](lokimq::ConnectionID other) { return other != id; });
+    Broadcast(std::move(ent), [id](oxenmq::ConnectionID other) { return other != id; });
   }
   
   void
-  Gossiper::Broadcast(Entity ent, std::function<bool(lokimq::ConnectionID)> filter)
+  Gossiper::Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID)> filter)
   {
     _peerManager->CallSafe([=]() {
-      _peerManager->ForEachPeer([ent=lokimq::bt_serialize(ent.to_bt_value()), ctx=_peerManager->GetContext(), filter](lokimq::ConnectionID id, PeerState )
+      _peerManager->ForEachPeer([ent=oxenmq::bt_serialize(ent.to_bt_value()), ctx=_peerManager->GetContext(), filter](oxenmq::ConnectionID id, PeerState )
       {
         if(filter and not filter(id))
           return;

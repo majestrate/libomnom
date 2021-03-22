@@ -5,18 +5,18 @@ namespace entsync
 {
 
   constexpr auto LogPrint =
-    [](lokimq::LogLevel lvl, const char * file, int line, std::string msg)
+    [](oxenmq::LogLevel lvl, const char * file, int line, std::string msg)
     { std::cout << lvl << " " << file << ":" << line << " " << msg << std::endl; };
     
 
   class PyContext : public Context
   {
   public:
-    lokimq::LokiMQ lmq;
+    oxenmq::OxenMQ lmq;
 
     explicit PyContext(std::string dialect)
       : Context(lmq, std::move(dialect)),
-        lmq{LogPrint, lokimq::LogLevel::info}
+        lmq{LogPrint, oxenmq::LogLevel::info}
     {
     }
 
@@ -50,7 +50,7 @@ namespace entsync
       .def("add_peer",
            [](PyContext & self, std::string addr)
            {
-             self.AddPersistingPeer(lokimq::address{addr});
+             self.AddPersistingPeer(oxenmq::address{addr});
            })
       .def("start",
            [](PyContext & self)

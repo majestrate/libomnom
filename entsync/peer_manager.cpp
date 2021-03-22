@@ -11,9 +11,9 @@ namespace entsync
   constexpr auto OK = "OKAY";
 
   
-  PeerInfo::PeerInfo(lokimq::bt_value val)
+  PeerInfo::PeerInfo(oxenmq::bt_value val)
   {
-    if(const auto dict = std::get_if<lokimq::bt_dict>(&val))
+    if(const auto dict = std::get_if<oxenmq::bt_dict>(&val))
     {
       if(const auto uid_str = std::get_if<std::string>(&dict->at("uid")))
       {
@@ -23,7 +23,7 @@ namespace entsync
       }
       else
         throw std::invalid_argument{"PeerInfo has no uid"};
-      if(const auto addr_list = std::get_if<lokimq::bt_list>(&dict->at("addrs")))
+      if(const auto addr_list = std::get_if<oxenmq::bt_list>(&dict->at("addrs")))
       {
         for(const auto & item : *addr_list)
         {
@@ -37,15 +37,15 @@ namespace entsync
       throw std::invalid_argument{"PeerInfo bt_value not a dict"};
   }
   
-  lokimq::bt_value
+  oxenmq::bt_value
   PeerInfo::to_bt_value() const
   {
-    lokimq::bt_list bt_addrs;
+    oxenmq::bt_list bt_addrs;
     for(const auto & addr : addrs)
     {
       bt_addrs.push_back(addr.to_bt_value());
     }
-    lokimq::bt_dict value{
+    oxenmq::bt_dict value{
       {"uid", std::string{reinterpret_cast<const char*>(uid.data()), uid.size()}},
       {"addrs", bt_addrs}
     };
@@ -53,9 +53,9 @@ namespace entsync
   }
 
 
-  PeerAddr::PeerAddr(lokimq::bt_value val)
+  PeerAddr::PeerAddr(oxenmq::bt_value val)
   {
-    if(const auto dict = std::get_if<lokimq::bt_dict>(&val))
+    if(const auto dict = std::get_if<oxenmq::bt_dict>(&val))
     {
       if(const auto addr_str = std::get_if<std::string>(&dict->at("addr")))
       {
@@ -75,10 +75,10 @@ namespace entsync
     
   }
   
-  lokimq::bt_value
+  oxenmq::bt_value
   PeerAddr::to_bt_value() const
   {
-    lokimq::bt_dict value{
+    oxenmq::bt_dict value{
       {"addr", addr},
       {"rank", rank}
     };
@@ -97,11 +97,11 @@ namespace entsync
     randombytes(m_OurInfo.uid.data(), m_OurInfo.uid.size());
     _ctx->AddRequestHandler(
       "register_conn",
-      [&](lokimq::Message & msg) { HandleRegisterConn(msg); });
+      [&](oxenmq::Message & msg) { HandleRegisterConn(msg); });
     
     _ctx->AddRequestHandler(
       "list_peers",
-      [&](lokimq::Message & msg) { HandleListPeers(msg); });
+      [&](oxenmq::Message & msg) { HandleListPeers(msg); });
     
     _ctx->lmq().add_timer([&]() { Tick(); }, 100ms, true, m_Logic);
   }
@@ -113,25 +113,25 @@ namespace entsync
   }
 
   void
-  PeerManager::HandleListPeers(lokimq::Message & msg)
+  PeerManager::HandleListPeers(oxenmq::Message & msg)
   {
-    std::vector<lokimq::bt_value> peers{};
+    std::vector<oxenmq::bt_value> peers{};
     CallSafe([&]() {
       for(const auto & info : m_Peers)
       {
         peers.emplace_back(info.second.peerInfo.to_bt_value());
       }
     });
-    msg.send_reply(OK, lokimq::bt_serialize(peers));
+    msg.send_reply(OK, oxenmq::bt_serialize(peers));
   }
   
   void
-  PeerManager::HandleRegisterConn(lokimq::Message & msg)
+  PeerManager::HandleRegisterConn(oxenmq::Message & msg)
   {
     PeerInfo info;
     try
     {
-      info = PeerInfo{lokimq::bt_get(msg.data.at(0))};
+      info = PeerInfo{oxenmq::bt_get(msg.data.at(0))};
     }
     catch(std::exception & ex)
     {
@@ -139,7 +139,7 @@ namespace entsync
       msg.send_reply(NACK, ex.what());
       return;
     }
-    std::promise<std::optional<lokimq::bt_value>> reply;
+    std::promise<std::optional<oxenmq::bt_value>> reply;
     CallSafe([&, info=std::move(info), conn=msg.conn]() {
       try
       {
@@ -148,7 +148,7 @@ namespace entsync
           reply.set_value(std::nullopt);
         }
         RegisterPeer(conn, std::move(info));
-        reply.set_value(std::optional<lokimq::bt_value>{m_OurInfo.to_bt_value()});
+        reply.set_value(std::optional<oxenmq::bt_value>{m_OurInfo.to_bt_value()});
       }
       catch(std::exception & ex)
       {
@@ -162,7 +162,7 @@ namespace entsync
       const auto maybe = ftr.get();
       if(maybe.has_value())
       {
-        msg.send_reply(OK, lokimq::bt_serialize(*maybe));
+        msg.send_reply(OK, oxenmq::bt_serialize(*maybe));
       }
       else
       {
@@ -176,7 +176,7 @@ namespace entsync
   }
 
   void
-  PeerManager::RegisterPeer(lokimq::ConnectionID conn, PeerInfo info)
+  PeerManager::RegisterPeer(oxenmq::ConnectionID conn, PeerInfo info)
   {
     for(const auto & peeraddr : info.addrs)
     {
@@ -216,9 +216,9 @@ namespace entsync
   }
   
   void
-  PeerManager::OnNewOutboundPeer(lokimq::ConnectionID id, lokimq::address addr)
+  PeerManager::OnNewOutboundPeer(oxenmq::ConnectionID id, oxenmq::address addr)
   {
-    /// send a register_conn command to tell the remote peer about our node
+    // send a register_conn command to tell the remote peer about our node
     _ctx->Request(
       id,
       "register_conn",
@@ -244,7 +244,7 @@ namespace entsync
           } 
           try
           {
-            info = PeerInfo{lokimq::bt_get(data.at(1))};
+            info = PeerInfo{oxenmq::bt_get(data.at(1))};
           }
           catch(std::exception & ex)
           {
@@ -267,11 +267,11 @@ namespace entsync
             KillConnection();
           }
         });
-      }, lokimq::bt_serialize(m_OurInfo.to_bt_value()));
+      }, oxenmq::bt_serialize(m_OurInfo.to_bt_value()));
   }
 
   void
-  PeerManager::AddPersistingPeer(lokimq::address peerAddr)
+  PeerManager::AddPersistingPeer(oxenmq::address peerAddr)
   {
     std::promise<void> wait;
     CallSafe([&, peerAddr]() {
@@ -312,7 +312,7 @@ namespace entsync
         continue;
       _ctx->lmq().connect_remote(
         peerAddr,
-        [&, addr=peerAddr, persist](lokimq::ConnectionID conn)
+        [&, addr=peerAddr, persist](oxenmq::ConnectionID conn)
         {
           LogInfo(_ctx, "connected to ", addr, " via ", conn);
           CallSafe([&, conn, addr]() {
@@ -320,7 +320,7 @@ namespace entsync
             m_Peers[conn].persist = persist;
           });
         },
-        [&, addr=peerAddr] (lokimq::ConnectionID, std::string_view reason)
+        [&, addr=peerAddr] (oxenmq::ConnectionID, std::string_view reason)
         {
           LogInfo(_ctx, "did not connect to ", addr, ": ", reason);
           CallSafe([&, addr]() {

@@ -4,7 +4,7 @@
 
 #include "crypto_hash.hpp"
 
-#include <lokimq/bt_value.h>
+#include <oxenmq/bt_value.h>
 
 namespace entsync
 {
@@ -15,7 +15,7 @@ namespace entsync
   {
     
     EntityKind() = default;
-    EntityKind(lokimq::bt_value val);
+    EntityKind(oxenmq::bt_value val);
     explicit EntityKind(std::string name, bool ephemeral);
     
     /// the name of this entity, must be distinct
@@ -26,7 +26,7 @@ namespace entsync
     bool operator==(const EntityKind & other) const { return name == other.name; };
     bool operator!=(const EntityKind & other) const { return not(*this == other); }
 
-    lokimq::bt_value to_bt_value() const;
+    oxenmq::bt_value to_bt_value() const;
     
   };
 
@@ -36,7 +36,7 @@ namespace entsync
   {
     
     EntityID() = default;
-    EntityID(lokimq::bt_value val);
+    EntityID(oxenmq::bt_value val);
     explicit EntityID(uint64_t index);
     /// either a blockchain height or a hash value
     std::variant<uint64_t, CryptoHash> ID;
@@ -44,7 +44,7 @@ namespace entsync
     bool operator==(const EntityID & other) const { return ID == other.ID; }
     bool operator!=(const EntityID & other) const { return not(*this == other); }
 
-    lokimq::bt_value to_bt_value() const;
+    oxenmq::bt_value to_bt_value() const;
     
   };
 
@@ -54,11 +54,11 @@ namespace entsync
   {
 
     Entity() = default;
-    Entity(lokimq::bt_value val);
+    Entity(oxenmq::bt_value val);
 
     EntityKind Kind;
     EntityID ID;
-    lokimq::bt_value Data;
+    oxenmq::bt_value Data;
 
 
     bool operator==(const Entity & other) const
@@ -68,7 +68,7 @@ namespace entsync
     
     bool operator!=(const Entity & other) const { return not(*this == other); }
 
-    lokimq::bt_value to_bt_value() const;
+    oxenmq::bt_value to_bt_value() const;
     
   };
   

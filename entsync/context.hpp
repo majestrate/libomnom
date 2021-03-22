@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lokimq/lokimq.h>
+#include <oxenmq/oxenmq.h>
 #include "crypto_hash.hpp"
 #include "entity.hpp"
 #include "gossip.hpp"
@@ -21,7 +21,7 @@ namespace entsync
   {
     const std::string m_Dialect;
   protected:
-    lokimq::LokiMQ & m_LMQ;
+    oxenmq::OxenMQ & m_LMQ;
     
     EntitySearcher m_Search;
     EntityHandler m_Handler;
@@ -29,7 +29,7 @@ namespace entsync
     Gossiper m_Gossip;
     
   public:
-    explicit Context(lokimq::LokiMQ & lmq, std::string dialect);
+    explicit Context(oxenmq::OxenMQ & lmq, std::string dialect);
     /// non copyable
     Context(const Context &) = delete;
     /// non movable
@@ -38,13 +38,13 @@ namespace entsync
     Gossiper &
     Gossip() { return m_Gossip; };
     
-    /// add a listener to lokimq on lmqAddr to accept inbound connections
+    /// add a listener to oxenmq on lmqAddr to accept inbound connections
     /// advertise a set of reachable endpoints that it will publish if applicable in order of rank
     void
     Listen(std::string lmqAddr, std::set<PeerAddr> adverts);
 
     void
-    AddPersistingPeer(lokimq::address peerAddr);
+    AddPersistingPeer(oxenmq::address peerAddr);
 
     /// start the internal components
     void
@@ -53,11 +53,11 @@ namespace entsync
     /// maximum number of allowed peers
     int maxPeers = -1;
 
-    lokimq::LokiMQ & lmq() { return m_LMQ; };
+    oxenmq::OxenMQ & lmq() { return m_LMQ; };
 
     template<typename ...T>
     void
-    Request(lokimq::ConnectionID id, std::string_view method, lokimq::LokiMQ::ReplyCallback callback, const T& ... opts)
+    Request(oxenmq::ConnectionID id, std::string_view method, oxenmq::OxenMQ::ReplyCallback callback, const T& ... opts)
     {
       const std::string call = m_Dialect + "." + std::string{method};
       m_LMQ.request(std::move(id), call, std::move(callback), opts...);
@@ -65,17 +65,17 @@ namespace entsync
 
     template<typename ...T>
     void
-    Send(lokimq::ConnectionID id, std::string_view method, const T& ... opts)
+    Send(oxenmq::ConnectionID id, std::string_view method, const T& ... opts)
     {
       const std::string call = m_Dialect + "." + std::string{method};
       m_LMQ.send(std::move(id), call, opts...);
     }
 
     void
-    AddRequestHandler(std::string method, lokimq::LokiMQ::CommandCallback handler);
+    AddRequestHandler(std::string method, oxenmq::OxenMQ::CommandCallback handler);
 
     void
-    AddCommandHandler(std::string method, lokimq::LokiMQ::CommandCallback handler);
+    AddCommandHandler(std::string method, oxenmq::OxenMQ::CommandCallback handler);
 
     
   };

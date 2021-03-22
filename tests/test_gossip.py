@@ -26,7 +26,6 @@ class Entity(pyentsync.Entity):
         self.ID = pyentsync.EntityID(idx)
         self.Kind = pyentsync.EntityKind("test-entity", False)
         self.set_data(str(data))
-
         
 class Node:
 

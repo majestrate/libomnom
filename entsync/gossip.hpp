@@ -2,7 +2,7 @@
 
 #include "entity.hpp"
 #include "storage.hpp"
-#include <lokimq/lokimq.h>
+#include <oxenmq/oxenmq.h>
 #include <memory>
 #include <functional>
 #include <unordered_map>
@@ -20,10 +20,10 @@ namespace entsync
 
     std::unordered_map<EntityKind, std::unique_ptr<EntityStorage>> m_Storage;
 
-    std::optional<lokimq::TaggedThreadID> m_Logic;
+    std::optional<oxenmq::TaggedThreadID> m_Logic;
     
     void
-    HandleGossip(lokimq::ConnectionID id, Entity ent);
+    HandleGossip(oxenmq::ConnectionID id, Entity ent);
     
   public:
     explicit Gossiper(PeerManager * peerManager);
@@ -38,7 +38,7 @@ namespace entsync
     
     /// broadcast an entity to the network
     void
-    Broadcast(Entity ent, std::function<bool(lokimq::ConnectionID)> filter=nullptr);
+    Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID)> filter=nullptr);
 
     /// add a handler to handle new gossiped entities
     void

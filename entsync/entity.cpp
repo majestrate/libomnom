@@ -9,9 +9,9 @@ namespace entsync
     ephemeral{_ephemeral}
   {}
   
-  EntityKind::EntityKind(lokimq::bt_value val)
+  EntityKind::EntityKind(oxenmq::bt_value val)
   {
-    if(auto list = std::get_if<lokimq::bt_list>(&val))
+    if(auto list = std::get_if<oxenmq::bt_list>(&val))
     {
       if(list->size() != 2)
         throw std::invalid_argument{"entity kind bad size: " + std::to_string(list->size())};
@@ -34,15 +34,15 @@ namespace entsync
       throw std::invalid_argument{"entity kind not a list"};
   }
 
-  lokimq::bt_value
+  oxenmq::bt_value
   EntityKind::to_bt_value() const
   {
-    return lokimq::bt_list{lokimq::bt_value{name}, lokimq::bt_value{ephemeral ? uint64_t{0} : uint64_t{1}}};
+    return oxenmq::bt_list{oxenmq::bt_value{name}, oxenmq::bt_value{ephemeral ? uint64_t{0} : uint64_t{1}}};
   }
   
   EntityID::EntityID(uint64_t index) : ID{index} {}
   
-  EntityID::EntityID(lokimq::bt_value val)
+  EntityID::EntityID(oxenmq::bt_value val)
   {
     if(const auto integer = std::get_if<uint64_t>(&val))
     {
@@ -60,23 +60,23 @@ namespace entsync
       throw std::invalid_argument{"entity id is not an integer or string"};
   }
 
-  lokimq::bt_value
+  oxenmq::bt_value
   EntityID::to_bt_value() const
   {
     if(const auto integer = std::get_if<uint64_t>(&ID))
     {
-      return lokimq::bt_value{*integer};
+      return oxenmq::bt_value{*integer};
     }
     if(const auto hash = std::get_if<CryptoHash>(&ID))
     {
-      return lokimq::bt_value{std::string{reinterpret_cast<const char*>(hash->data()), hash->size()}};
+      return oxenmq::bt_value{std::string{reinterpret_cast<const char*>(hash->data()), hash->size()}};
     }
     throw std::logic_error{"entity id holds invalid data"};
   }
   
-  Entity::Entity(lokimq::bt_value val)
+  Entity::Entity(oxenmq::bt_value val)
   {
-    if(auto list = std::get_if<lokimq::bt_list>(&val))
+    if(auto list = std::get_if<oxenmq::bt_list>(&val))
     {
       if(list->size() != 3)
         throw std::invalid_argument{"entity size missmatch: " + std::to_string(list->size()) + " != 3"};
@@ -92,9 +92,9 @@ namespace entsync
       throw std::invalid_argument{"entity is not a list"};
   }
 
-  lokimq::bt_value
+  oxenmq::bt_value
   Entity::to_bt_value() const
   {
-    return lokimq::bt_list{Kind.to_bt_value(), ID.to_bt_value(), Data};
+    return oxenmq::bt_list{Kind.to_bt_value(), ID.to_bt_value(), Data};
   }
 }
