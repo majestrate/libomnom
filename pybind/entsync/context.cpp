@@ -28,12 +28,29 @@ namespace entsync
 
   };
 
-  
+
   void
   Context_Init(py::module & mod)
   {
     py::class_<PyContext>(mod, "Context")
       .def(py::init<std::string>())
+      .def("set_storage_for",
+           [](PyContext & self, EntityKind kind, EntityStorage & storage)
+           {
+             self.Gossip().SetEntityStorage(kind, storage);
+           })
+      .def("add_entity_handler",
+           [](PyContext & self, EntityKind kind, py::function func)
+           {
+             self.Gossip().AddEntityHandler(
+               kind,
+               [func](PeerState, Entity ent)
+               {
+                 py::gil_scoped_acquire acquire;
+                 func(ent);
+               });
+           })
+
       .def("broadcast_entity",
            [](PyContext & self, Entity ent)
            {

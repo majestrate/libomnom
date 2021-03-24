@@ -29,35 +29,59 @@ namespace entsync
   void
   Gossiper::HandleGossip(oxenmq::ConnectionID id, Entity ent)
   {
-    CallSafe([&, ent]() {
-      // inform handlers 
-      auto itr = m_Storage.find(ent.Kind);
-      if(itr == m_Storage.end() or not itr->second->HasEntity(ent))
+    CallSafe(
+      [=]()
       {
-        const auto range = m_Handlers.equal_range(ent.Kind);
-        auto item = range.first;
-        while(item != range.second)
-        {
-          item->second(ent);
-          item++;
-        }
-        if(itr != m_Storage.end())
-          itr->second->StoreEntity(std::move(ent));
-      } 
-    });
-    Broadcast(std::move(ent), [id](oxenmq::ConnectionID other) { return other != id; });
+        auto visit =
+          [=](std::optional<PeerState> state)
+          {
+            // inform handlers
+            if(state == std::nullopt)
+            {
+              return;
+            }
+            CallSafe(
+              [=, peerState=*state]()
+              {
+                const auto range = m_Handlers.equal_range(ent.Kind);
+                auto itr = range.first;
+                while(itr != range.second)
+                {
+                  auto func = [handler=itr->second, peerState, ent]() { handler(peerState, ent); };
+                  itr++;
+                  _peerManager->GetContext()->lmq().job(func);
+                }
+
+              });
+          };
+        _peerManager->VisitPeerStateForConnection(id, visit);
+      });
   }
-  
+
   void
-  Gossiper::Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID)> filter)
+  Gossiper::Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID, const PeerState &)> filter)
   {
     _peerManager->CallSafe([=]() {
-      _peerManager->ForEachPeer([ent=oxenmq::bt_serialize(ent.to_bt_value()), ctx=_peerManager->GetContext(), filter](oxenmq::ConnectionID id, PeerState )
+      _peerManager->ForEachPeer([ent=oxenmq::bt_serialize(ent.to_bt_value()), ctx=_peerManager->GetContext(), filter](oxenmq::ConnectionID id, PeerState state)
       {
-        if(filter and not filter(id))
+        if(filter and not filter(id, state))
           return;
         ctx->Send(id, "gossip", ent);
       });
     });
   }
+
+  void
+  Gossiper::SetEntityStorage(EntityKind kind, EntityStorage & storage)
+  {
+    m_Storage.emplace(kind, storage);
+  }
+
+
+  void
+  Gossiper::AddEntityHandler(EntityKind kind, std::function<void(const PeerState&, Entity)> handler)
+  {
+    m_Handlers.emplace(kind, handler);
+  }
+
 }

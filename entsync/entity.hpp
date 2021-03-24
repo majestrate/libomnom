@@ -45,6 +45,8 @@ namespace entsync
     bool operator!=(const EntityID & other) const { return not(*this == other); }
 
     oxenmq::bt_value to_bt_value() const;
+
+    std::string ToString() const;
     
   };
 
@@ -69,6 +71,8 @@ namespace entsync
     bool operator!=(const Entity & other) const { return not(*this == other); }
 
     oxenmq::bt_value to_bt_value() const;
+
+    std::string ToString() const;
     
   };
   
@@ -82,7 +86,7 @@ namespace std
     size_t
     operator()(const entsync::EntityKind & kind) const
     {
-      return std::hash<std::string>{}(kind.name);
+      return std::hash<decltype(kind.name)>{}(kind.name);
     }
   };
 

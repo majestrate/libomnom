@@ -60,7 +60,7 @@ namespace entsync
     Request(oxenmq::ConnectionID id, std::string_view method, oxenmq::OxenMQ::ReplyCallback callback, const T& ... opts)
     {
       const std::string call = m_Dialect + "." + std::string{method};
-      m_LMQ.request(std::move(id), call, std::move(callback), opts...);
+      m_LMQ.request(std::move(id), call, std::move(callback), std::forward<const T&>(opts)...);
     }
 
     template<typename ...T>
@@ -68,7 +68,7 @@ namespace entsync
     Send(oxenmq::ConnectionID id, std::string_view method, const T& ... opts)
     {
       const std::string call = m_Dialect + "." + std::string{method};
-      m_LMQ.send(std::move(id), call, opts...);
+      m_LMQ.send(std::move(id), call, std::forward<const T&>(opts)...);
     }
 
     void

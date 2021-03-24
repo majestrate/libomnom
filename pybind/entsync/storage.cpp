@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "entsync/storage.hpp"
+#include <memory>
 
 namespace entsync
 {
@@ -12,6 +13,7 @@ namespace entsync
     bool
     HasEntity(Entity ent) const override
     {
+      py::gil_scoped_acquire acquire;
       PYBIND11_OVERRIDE_PURE(
         bool, /* Return type */
         EntityStorage,      /* Parent class */
@@ -23,7 +25,7 @@ namespace entsync
     void
     StoreEntity(Entity ent) override
     {
-    
+      py::gil_scoped_acquire acquire;
       PYBIND11_OVERRIDE_PURE(
         void, /* Return type */
         EntityStorage,      /* Parent class */

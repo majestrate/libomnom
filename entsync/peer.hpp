@@ -7,13 +7,13 @@
 
 namespace entsync
 {
-  
+
   /// a single reachable address on a peer
   struct PeerAddr
   {
     PeerAddr() = default;
     PeerAddr(oxenmq::bt_value val);
-    
+
     /// the advertised address in the form: protocol://address
     std::string addr;
     /// lower rank means we try it first
@@ -24,16 +24,16 @@ namespace entsync
 
     oxenmq::bt_value
     to_bt_value() const;
-    
+
   };
-  
+
   /// information about a peer on the network
   struct PeerInfo
   {
 
     PeerInfo() = default;
     PeerInfo(oxenmq::bt_value val);
-    
+
     /// all reachable addresses if it has any
     std::set<PeerAddr> addrs;
     /// a unique id used to identify this peer
@@ -42,6 +42,11 @@ namespace entsync
 
     oxenmq::bt_value
     to_bt_value() const;
+
+
+    std::string
+    ToString() const;
+
   };
 
   /// state about a peer

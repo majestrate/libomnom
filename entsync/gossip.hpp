@@ -11,14 +11,16 @@ namespace entsync
 {
 
   class PeerManager;
+  struct PeerState;
+
   
   class Gossiper
   {
     PeerManager * const _peerManager;
 
-    std::unordered_multimap<EntityKind, std::function<void(Entity)>> m_Handlers;
+    std::unordered_multimap<EntityKind, std::function<void(const PeerState&, Entity)>> m_Handlers;
 
-    std::unordered_map<EntityKind, std::unique_ptr<EntityStorage>> m_Storage;
+    std::unordered_map<EntityKind, EntityStorage &> m_Storage;
 
     std::optional<oxenmq::TaggedThreadID> m_Logic;
     
@@ -38,17 +40,17 @@ namespace entsync
     
     /// broadcast an entity to the network
     void
-    Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID)> filter=nullptr);
+    Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID, const PeerState &)> filter=nullptr);
 
     /// add a handler to handle new gossiped entities
     void
-    AddEntityHandler(EntityKind kind, std::function<void(Entity)> handler);
+    AddEntityHandler(EntityKind kind, std::function<void(const PeerState &, Entity)> handler);
 
     /// set persistent storage for this kind of entity
     /// throws std::invalid_argument if entity's kind is ephemeral
     /// replaces any existing storage
     void
-    SetEntityStorage(EntityKind kind, std::unique_ptr<EntityStorage> storage);
+    SetEntityStorage(EntityKind kind, EntityStorage & storage);
     
   };
   

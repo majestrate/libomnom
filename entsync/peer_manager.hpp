@@ -21,7 +21,7 @@ namespace entsync
   {
     using std::runtime_error::runtime_error;
   };
-  
+
   class PeerManager
   {
     Context * const _ctx;
@@ -29,9 +29,9 @@ namespace entsync
     PeerInfo m_OurInfo;
     std::unordered_map<oxenmq::ConnectionID, PeerState> m_Peers;
     PeerLimiter m_Limiter;
-    
+
     std::vector<std::pair<oxenmq::address, bool>> m_OutboundPeerAttempts;
-    
+
     void
     OnNewOutboundPeer(oxenmq::ConnectionID conn, oxenmq::address addr);
 
@@ -40,7 +40,7 @@ namespace entsync
 
     void
     HandleListPeers(oxenmq::Message & msg);
-    
+
     void
     Tick();
 
@@ -53,7 +53,7 @@ namespace entsync
 
     bool
     HasConnectionByAddress(std::string addr) const;
-    
+
   public:
     explicit PeerManager(Context * ctx);
     PeerManager(const PeerManager&) = delete;
@@ -73,13 +73,16 @@ namespace entsync
     /// add a peer to bootstrap from
     void
     AddBootstrapPeer(oxenmq::address addr);
-    
+
     /// add a forever connected peer
     void
     AddPersistingPeer(oxenmq::address addr);
 
     std::vector<std::string>
     GetPeerAddresses() const;
+
+    void
+    VisitPeerStateForConnection(oxenmq::ConnectionID id, std::function<void(std::optional<PeerState>)> visit);
 
     template<typename Visit>
     void
@@ -90,6 +93,6 @@ namespace entsync
     }
 
     Context * GetContext() { return _ctx; };
-    
+
   };
 }

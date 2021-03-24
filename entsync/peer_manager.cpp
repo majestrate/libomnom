@@ -3,6 +3,8 @@
 #include "logger.hpp"
 #include <sodium/randombytes.h>
 
+#include "oxenmq/hex.h"
+
 namespace entsync
 {
   using namespace std::literals;
@@ -10,7 +12,7 @@ namespace entsync
   constexpr auto NACK = "NACK";
   constexpr auto OK = "OKAY";
 
-  
+
   PeerInfo::PeerInfo(oxenmq::bt_value val)
   {
     if(const auto dict = std::get_if<oxenmq::bt_dict>(&val))
@@ -36,7 +38,7 @@ namespace entsync
     else
       throw std::invalid_argument{"PeerInfo bt_value not a dict"};
   }
-  
+
   oxenmq::bt_value
   PeerInfo::to_bt_value() const
   {
@@ -72,9 +74,9 @@ namespace entsync
     }
     else
       throw std::invalid_argument{"PeerAddr is not a dict"};
-    
+
   }
-  
+
   oxenmq::bt_value
   PeerAddr::to_bt_value() const
   {
@@ -84,7 +86,15 @@ namespace entsync
     };
     return value;
   }
-  
+
+
+  std::string
+  PeerInfo::ToString() const
+  {
+    return "PeerInfo: " + oxenmq::to_hex(uid.begin(), uid.end());
+  }
+
+
   PeerManager::PeerManager(Context * ctx) :
     _ctx{ctx}
   {
@@ -98,12 +108,12 @@ namespace entsync
     _ctx->AddRequestHandler(
       "register_conn",
       [&](oxenmq::Message & msg) { HandleRegisterConn(msg); });
-    
+
     _ctx->AddRequestHandler(
       "list_peers",
       [&](oxenmq::Message & msg) { HandleListPeers(msg); });
-    
-    _ctx->lmq().add_timer([&]() { Tick(); }, 100ms, true, m_Logic);
+
+    _ctx->lmq().add_timer([&]() { Tick(); }, 100ms, true, *m_Logic);
   }
 
   void
@@ -124,7 +134,7 @@ namespace entsync
     });
     msg.send_reply(OK, oxenmq::bt_serialize(peers));
   }
-  
+
   void
   PeerManager::HandleRegisterConn(oxenmq::Message & msg)
   {
@@ -187,7 +197,7 @@ namespace entsync
     state.lastKeepAlive = time::Now();
     LogInfo(_ctx, "peer registered on ", conn);
   }
-  
+
 
   bool
   PeerManager::HasConnectionToPeer(PeerInfo info) const
@@ -214,7 +224,7 @@ namespace entsync
     return false;
 
   }
-  
+
   void
   PeerManager::OnNewOutboundPeer(oxenmq::ConnectionID id, oxenmq::address addr)
   {
@@ -241,7 +251,7 @@ namespace entsync
               KillConnection();
             });
             return;
-          } 
+          }
           try
           {
             info = PeerInfo{oxenmq::bt_get(data.at(1))};
@@ -298,32 +308,32 @@ namespace entsync
     return addrs;
   }
 
- 
+
   void
   PeerManager::Tick()
   {
     for(const auto & item : m_OutboundPeerAttempts)
     {
-      const auto peerAddr = item.first;
+      const auto addr = item.first;
       const auto persist = item.second;
-      if(HasConnectionByAddress(peerAddr.zmq_address()))
+      if(HasConnectionByAddress(addr.zmq_address()))
         continue;
-      if(not m_Limiter.ShouldTryConnecting(peerAddr.zmq_address()))
+      if(not m_Limiter.ShouldTryConnecting(addr.zmq_address()))
         continue;
       _ctx->lmq().connect_remote(
-        peerAddr,
-        [&, addr=peerAddr, persist](oxenmq::ConnectionID conn)
+        addr,
+        [=](oxenmq::ConnectionID conn)
         {
           LogInfo(_ctx, "connected to ", addr, " via ", conn);
-          CallSafe([&, conn, addr]() {
+          CallSafe([=]() {
             OnNewOutboundPeer(conn, addr);
             m_Peers[conn].persist = persist;
           });
         },
-        [&, addr=peerAddr] (oxenmq::ConnectionID, std::string_view reason)
+        [=] (oxenmq::ConnectionID, std::string_view reason)
         {
           LogInfo(_ctx, "did not connect to ", addr, ": ", reason);
-          CallSafe([&, addr]() {
+          CallSafe([=]() {
             m_Limiter.MarkConnectFail(addr.zmq_address());
           });
         });
@@ -331,9 +341,28 @@ namespace entsync
   }
 
   void
+  PeerManager::VisitPeerStateForConnection(oxenmq::ConnectionID id, std::function<void(std::optional<PeerState>)> visit)
+  {
+    CallSafe(
+      [=]()
+      {
+        auto itr = m_Peers.find(id);
+        if(itr == m_Peers.end())
+        {
+          visit(std::nullopt);
+        }
+        else
+        {
+          visit(itr->second);
+        }
+      });
+  }
+
+
+  void
   PeerManager::CallSafe(std::function<void()> call) const
   {
     _ctx->lmq().job(std::move(call), *m_Logic);
   }
-  
+
 }
