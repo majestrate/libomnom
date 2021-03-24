@@ -195,7 +195,7 @@ def runsim(numNodes):
         if step > 0:
             ent = Entity(i, "test data")
             print('gossiping {}'.format(ent))
-            node s[0].broadcast(ent)
+            nodes[0].broadcast(ent)
 
         fig.clear()
         G = makeNetGraph(nodes)
