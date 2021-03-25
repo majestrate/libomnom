@@ -4,6 +4,7 @@ pybind11_add_module(pyentsync MODULE
   entsync/context.cpp
   entsync/entity.cpp
   entsync/gossip.cpp
+  entsync/peer.cpp
   entsync/storage.cpp
 )
 target_link_libraries(pyentsync PUBLIC entsync)

@@ -1,6 +1,8 @@
 #pragma once
 #include "crypto_hash.hpp"
 #include "entity.hpp"
+#include "peer.hpp"
+
 #include <oxenmq/oxenmq.h>
 #include <future>
 #include <optional>
@@ -32,7 +34,13 @@ namespace entsync
 
     /// obtain an entity of kind by id
     void
-    ObtainByID(EntityKind kind, EntityID id, std::function<void(std::optional<Entity>)> handler);
-    
+    MaybeObtainEntityByID(EntityKind kind, EntityID id, std::function<void(std::optional<Entity>)> handler);
+
+
+    /// ask all our peers and get the highest entity id
+    void
+    GetHighestEntityID(EntityKind kind, std::function<void(EntityID)> handler);
+
   };
+
 }

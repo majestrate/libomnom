@@ -4,6 +4,7 @@
 #include <oxenmq/bt_serialize.h>
 #include <string>
 #include <set>
+#include <functional>
 
 namespace entsync
 {
@@ -60,4 +61,18 @@ namespace entsync
     bool outbound;
   };
 
+} // namespace entsync
+
+namespace std
+{
+  template<>
+  struct hash<entsync::PeerInfo>
+  {
+    size_t
+    operator()(const entsync::PeerInfo & info) const
+    {
+      std::string_view view{reinterpret_cast<const char*>(info.uid.data()), info.uid.size()};
+      return std::hash<std::string_view>{}(view);
+    }
+  };
 }

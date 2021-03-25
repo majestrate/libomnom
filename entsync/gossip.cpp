@@ -13,7 +13,7 @@ namespace entsync
   {
     auto ctx = _peerManager->GetContext();
     m_Logic = ctx->lmq().add_tagged_thread("gossip-logic");
-    ctx->AddCommandHandler("gossip", [&](oxenmq::Message & msg)
+    ctx->AddCommandHandler("gossip", [=](oxenmq::Message & msg)
     {
       Entity ent{oxenmq::bt_get(msg.data[0])};
       HandleGossip(msg.conn, ent);
@@ -61,14 +61,17 @@ namespace entsync
   void
   Gossiper::Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID, const PeerState &)> filter)
   {
-    _peerManager->CallSafe([=]() {
+    std::promise<void> promise;
+    _peerManager->CallSafe([=, &promise]() {
       _peerManager->ForEachPeer([ent=oxenmq::bt_serialize(ent.to_bt_value()), ctx=_peerManager->GetContext(), filter](oxenmq::ConnectionID id, PeerState state)
       {
         if(filter and not filter(id, state))
           return;
         ctx->Send(id, "gossip", ent);
       });
+      promise.set_value();
     });
+    promise.get_future().wait();
   }
 
   void

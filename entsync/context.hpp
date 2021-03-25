@@ -37,6 +37,9 @@ namespace entsync
 
     Gossiper &
     Gossip() { return m_Gossip; };
+
+    EntitySearcher &
+    Search() { return m_Search; };
     
     /// add a listener to oxenmq on lmqAddr to accept inbound connections
     /// advertise a set of reachable endpoints that it will publish if applicable in order of rank

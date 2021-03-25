@@ -18,4 +18,7 @@ namespace entsync
 
   void
   Storage_Init(py::module& mod);
+
+  void
+  Peer_Init(py::module & mod);
 }

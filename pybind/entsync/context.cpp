@@ -44,17 +44,32 @@ namespace entsync
            {
              self.Gossip().AddEntityHandler(
                kind,
-               [func](PeerState, Entity ent)
+               [func](PeerState state, Entity ent)
                {
                  py::gil_scoped_acquire acquire;
-                 func(ent);
+                 func(ent, state.peerInfo);
                });
            })
 
       .def("broadcast_entity",
-           [](PyContext & self, Entity ent)
+           [](PyContext & self, Entity ent, std::function<bool(const PeerInfo &)> filter)
            {
-             self.Gossip().Broadcast(std::move(ent));
+             py::gil_scoped_release release;
+             self.Gossip().Broadcast(
+               std::move(ent),
+               [filter](auto, PeerState state)
+               {
+                 py::gil_scoped_acquire acquire;
+                 try
+                 {
+                   return filter(state.peerInfo);
+                 }
+                 catch(std::exception & ex)
+                 {
+                   std::cout << ex.what() << std::endl;
+                   return false;
+                 }
+               });
            })
       .def("listen",
           [](PyContext & self, std::string peerAddr)

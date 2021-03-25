@@ -71,15 +71,15 @@ class Node:
         del self._ctx
         self._ctx = None
 
-    def handleGotEntity(self, ent):
-        print("{} got {}".format(self.addr(), ent))
+    def handleGotEntity(self, ent, peer):
+        print("{} got {} from {}".format(self.addr(), ent, peer.uid()))
         if self._storage.HasEntity(ent):
             print("dropping {}".format(ent))
             return
         else:
             self._storage.StoreEntity(ent)
         print("repeating {}".format(ent))
-        self.broadcast(ent)
+        self.broadcast(ent, lambda other : other.uid() != peer.uid())
 
     def has_entity_at_index(self, idx):
         return self._storage.HasEntityByID(EntityID(idx))
@@ -100,10 +100,14 @@ class Node:
     def start(self):
         self._ctx.start()
 
-    def broadcast(self, ent):
+    def broadcast(self, ent, peer_filter=None):
         self._storage.StoreEntity(ent)
         print("broadcasting: {}".format(ent))
-        self._ctx.broadcast_entity(ent)
+        if peer_filter is None:
+            peer_filter = lambda x: True
+        self._ctx.broadcast_entity(ent, peer_filter)
+        print("okay")
+
 
     def add_peer(self, addr):
         self._ctx.add_peer(addr)
@@ -127,7 +131,6 @@ def makeNetwork(numNodes=10):
     nodes = []
     for n in range(numNodes):
         ctx = Node(n)
-        ctx.start()
         nodes.append(ctx)
     return nodes
 
@@ -144,36 +147,54 @@ def connect_sequentially(nodes):
     for idx in range(len(nodes)):
         if idx < len(nodes) - 1:
             nodes[idx].add_peer(nodes[idx+1].addr())
+    nodes = None
 
 def connect_random(nodes):
     copy_nodes = list(nodes)
     random.shuffle(copy_nodes)
     connect_sequentially(copy_nodes)
+    copy_nodes = None
+
+
+class Swarm:
+
+    def __init__(self, num):
+        self.nodes = makeNetwork(num)
+
+    def __enter__(self, *args):
+        for node in self.nodes:
+            node.start()
+        return self
+
+    def __exit__(self, *args):
+        for node in self.nodes:
+            node.stop()
+        del self.nodes
+
 
 def test_broadcast_seq_toplogy():
-    nodes = makeNetwork(50)
-    connect_sequentially(nodes)
-    time.sleep(1)
-    ent = Entity(1, "test data")
-    nodes[0].broadcast(ent)
-    time.sleep(1)
-    for node in nodes:
-        print("test node {}".format(node.addr()))
-        assert node.has_entity_at_index(1)
-        node.stop()
+    with Swarm(50) as swarm:
+        nodes = swarm.nodes
+        connect_sequentially(nodes)
+        time.sleep(1)
+        ent = Entity(1, "test data")
+        nodes[0].broadcast(ent)
+        time.sleep(1)
+        for node in nodes:
+            print("test node {}".format(node.addr()))
+            assert node.has_entity_at_index(1)
 
-def test_broadcast_random_topology():
-    nodes = makeNetwork(50)
-    time.sleep(1)
-    connect_random(nodes)
-    time.sleep(1)
-    ent = Entity(1, "test data")
-    nodes[0].broadcast(ent)
-    time.sleep(1)
-    for node in nodes:
-        print("test node {}".format(node.addr()))
-        assert node.has_entity_at_index(1)
-        node.stop()
+def test_broadcast_random_topology_single_peer():
+    with Swarm(50) as swarm:
+        nodes = swarm.nodes
+        connect_random(nodes)
+        time.sleep(1)
+        ent = Entity(1, "test data")
+        nodes[0].broadcast(ent)
+        time.sleep(1)
+        for node in nodes:
+            print("test node {}".format(node.addr()))
+            assert node.has_entity_at_index(1)
 
 def makeLabels(G, nodes):
     labels = dict()
