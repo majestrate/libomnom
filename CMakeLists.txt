@@ -87,3 +87,8 @@ if(WITH_PYBIND)
   add_subdirectory(pybind)
 endif()
   
+option(WITH_TESTS "run tests" ON)
+
+if(WITH_TESTS)
+  add_subdirectory(tests)
+endif()
