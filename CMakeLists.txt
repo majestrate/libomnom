@@ -80,7 +80,7 @@ install(
 )
 
 
-option(WITH_PYBIND "build pybind layer for integration tests" OFF)
+option(WITH_PYBIND "build pybind layer for integration tests" ON)
 
 if(WITH_PYBIND)
   add_subdirectory(external/pybind11)
