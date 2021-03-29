@@ -12,15 +12,12 @@ class Storage(pyentsync.EntityStorage):
         self._entities = dict()
 
     def HasEntity(self, ent):
-        print("check if {} has {}".format(self._name, ent))
         return ent.ID.value() in self._entities
 
     def StoreEntity(self, ent):
-        print("store entity {} in {} at {}".format(ent, self._name, ent.ID))
         self._entities[ent.ID.value()] = ent
 
     def HasEntityByID(self, id):
-        print("check if {} has at {}".format(self._name, id))
         return id.value() in self._entities
 
     def IDs(self):
@@ -72,13 +69,10 @@ class Node:
         self._ctx = None
 
     def handleGotEntity(self, ent, peer):
-        print("{} got {} from {}".format(self.addr(), ent, peer.uid()))
         if self._storage.HasEntity(ent):
-            print("dropping {}".format(ent))
             return
         else:
             self._storage.StoreEntity(ent)
-        print("repeating {}".format(ent))
         self.broadcast(ent, lambda other : other.uid() != peer.uid())
 
     def has_entity_at_index(self, idx):
@@ -102,11 +96,9 @@ class Node:
 
     def broadcast(self, ent, peer_filter=None):
         self._storage.StoreEntity(ent)
-        print("broadcasting: {}".format(ent))
         if peer_filter is None:
             peer_filter = lambda x: True
         self._ctx.broadcast_entity(ent, peer_filter)
-        print("okay")
 
 
     def add_peer(self, addr):
@@ -150,12 +142,15 @@ class Swarm:
     def __init__(self, num):
         self.nodes = makeNetwork(num)
 
+    def sleep(self, num):
+        pyentsync.sleep_ms(int(num * 1000))
+
     def connect_randomly(self):
         connect_random(self.nodes)
 
     def connect_sequentially(self):
         connect_sequentially(self.nodes)
-        
+
     def __enter__(self, *args):
         for node in self.nodes:
             node.start()

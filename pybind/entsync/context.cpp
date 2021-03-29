@@ -7,7 +7,7 @@ namespace entsync
   constexpr auto LogPrint =
     [](oxenmq::LogLevel lvl, const char * file, int line, std::string msg)
     { std::cout << lvl << " " << file << ":" << line << " " << msg << std::endl; };
-    
+
 
   class PyContext : public Context
   {
@@ -16,8 +16,9 @@ namespace entsync
 
     explicit PyContext(std::string dialect)
       : Context(lmq, std::move(dialect)),
-        lmq{LogPrint, oxenmq::LogLevel::info}
+        lmq{}
     {
+      lmq.set_general_threads(1);
     }
 
     std::vector<std::string>
@@ -44,24 +45,39 @@ namespace entsync
            {
              self.Gossip().AddEntityHandler(
                kind,
-               [func](PeerState state, Entity ent)
+               [func, &self](PeerState state, Entity ent)
                {
-                 py::gil_scoped_acquire acquire;
-                 func(ent, state.peerInfo);
+                 std::promise<void> result;
+                 self.lmq.job(
+                   [state, ent, func, &result]()
+                   {
+                     try
+                     {
+                       py::gil_scoped_acquire acquire;
+                       func(ent, state.peerInfo);
+                     }
+                     catch(std::exception & ex)
+                     {
+                       std::cout << ex.what() << std::endl;
+                     }
+                     result.set_value();
+                   });
+                 result.get_future().get();
                });
            })
 
       .def("broadcast_entity",
            [](PyContext & self, Entity ent, std::function<bool(const PeerInfo &)> filter)
            {
+             // XXX: why yes, we do need this, how could you tell... [gigachad.jpeg]
              py::gil_scoped_release release;
              self.Gossip().Broadcast(
                std::move(ent),
                [filter](auto, PeerState state)
                {
-                 py::gil_scoped_acquire acquire;
                  try
                  {
+                   py::gil_scoped_acquire acquire;
                    return filter(state.peerInfo);
                  }
                  catch(std::exception & ex)

@@ -47,11 +47,9 @@ namespace entsync
                 auto itr = range.first;
                 while(itr != range.second)
                 {
-                  auto func = [handler=itr->second, peerState, ent]() { handler(peerState, ent); };
+                  itr->second(peerState, ent);
                   itr++;
-                  _peerManager->GetContext()->lmq().job(func);
                 }
-
               });
           };
         _peerManager->VisitPeerStateForConnection(id, visit);
