@@ -35,6 +35,5 @@ if you are building integration tests you also need:
 compile and run integration tests:
 
     $ mkdir -p build && cd build
-    $ cmake .. -DWITH_PYBIND=ON
-    $ make
-    $ PYTHONPATH=pybind pytest -m ../tests/
+    $ cmake .. -DWITH_PYBIND=ON -DWITH_TESTS=ON
+    $ make check
