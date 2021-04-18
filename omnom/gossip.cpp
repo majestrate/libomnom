@@ -41,9 +41,9 @@ namespace omnom
             else // no such entity
               defer.reply("");
           });
-            
+
       });
-                           
+
   }
 
   std::optional<Entity>

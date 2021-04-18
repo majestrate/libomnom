@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(libentsync CXX C)
+project(libomnom CXX C)
 
 include(GNUInstallDirs)
 
@@ -80,14 +80,14 @@ install(
 )
 
 
-option(WITH_PYBIND "build pybind layer for integration tests" ON)
+option(WITH_PYBIND "build pybind layer for integration tests" OFF)
 
 if(WITH_PYBIND)
   add_subdirectory(external/pybind11)
   add_subdirectory(pybind)
 endif()
   
-option(WITH_TESTS "run tests" ON)
+option(WITH_TESTS "run integration tests" OFF)
 
 if(WITH_TESTS)
   add_subdirectory(tests)
