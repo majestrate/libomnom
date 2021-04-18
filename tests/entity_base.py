@@ -10,14 +10,14 @@ class Storage(pyomnom.EntityStorage):
         self._name = name
         pyomnom.EntityStorage.__init__(self)
         self._entities = dict()
-        self._maxid = None
+        self._maxid = EntityID(0)
 
     def HasEntity(self, ent):
         return ent.ID.value() in self._entities
 
     def StoreEntity(self, ent):
         self._entities[ent.ID.value()] = ent
-        if self._maxid is None or self._maxid < ent.ID:
+        if self._maxid < ent.ID:
             self._maxid = ent.ID
 
     def HasEntityByID(self, id):
@@ -30,7 +30,6 @@ class Storage(pyomnom.EntityStorage):
     def GetEntityByID(self, entID):
         if entID.value() in self._entities:
             return self._entities[entID.value()]
-
 
     def IDs(self):
         ids = []
@@ -46,13 +45,6 @@ class EntityID(pyomnom.EntityID):
 
     def increment(self, amount=1):
         return EntityID(self._idx + amount)
-
-
-    def __repr__(self):
-        return "index={}".format(self._idx)
-
-    def __lt__(self, other):
-        return self._idx < other._idx
 
 TestEntityKind = pyomnom.EntityKind("test-kind", False)
 
