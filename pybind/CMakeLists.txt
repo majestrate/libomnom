@@ -6,6 +6,7 @@ pybind11_add_module(pyomnom MODULE
   omnom/gossip.cpp
   omnom/peer.cpp
   omnom/storage.cpp
+  omnom/searcher.cpp
 )
 target_link_libraries(pyomnom PUBLIC omnom)
 target_include_directories(pyomnom PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})

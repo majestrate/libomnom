@@ -40,68 +40,16 @@ namespace omnom
            {
              self.Gossip().SetEntityStorage(kind, storage);
            })
-      .def("search_for_entity",
-           [](PyContext & self, EntityKind kind, EntityID id)
+      .def("searcher",
+           [](PyContext & self) -> omnom::EntitySearcher &
            {
-             py::gil_scoped_release release;
-             std::promise<std::optional<Entity>> promise;
-             self.Search().
-               MaybeObtainEntityByID(
-                 std::move(kind),
-                 std::move(id),
-                 [&promise](std::optional<Entity> result)
-                 {
-                   promise.set_value(result);
-                 });
-             return promise.get_future().get();
-           })
-      .def("add_entity_handler",
-           [](PyContext & self, EntityKind kind, py::function func)
+             return self.Search();
+           }, py::return_value_policy::reference)
+      .def("gossiper",
+           [](PyContext & self) -> omnom::Gossiper &
            {
-             self.Gossip().AddEntityHandler(
-               kind,
-               [func, &self](PeerState state, Entity ent)
-               {
-                 std::promise<void> result;
-                 self.lmq.job(
-                   [state, ent, func, &result]()
-                   {
-                     try
-                     {
-                       py::gil_scoped_acquire acquire;
-                       func(ent, state.peerInfo);
-                     }
-                     catch(std::exception & ex)
-                     {
-                       std::cout << ex.what() << std::endl;
-                     }
-                     result.set_value();
-                   });
-                 result.get_future().get();
-               });
-           })
-
-      .def("broadcast_entity",
-           [](PyContext & self, Entity ent, std::function<bool(const PeerInfo &)> filter)
-           {
-             // XXX: why yes, we do need this, how could you tell... [gigachad.jpeg]
-             py::gil_scoped_release release;
-             self.Gossip().Broadcast(
-               std::move(ent),
-               [filter](auto, PeerState state)
-               {
-                 try
-                 {
-                   py::gil_scoped_acquire acquire;
-                   return filter(state.peerInfo);
-                 }
-                 catch(std::exception & ex)
-                 {
-                   std::cout << ex.what() << std::endl;
-                   return false;
-                 }
-               });
-           })
+             return self.Gossip();
+           }, py::return_value_policy::reference)
       .def("listen",
           [](PyContext & self, std::string peerAddr)
           {

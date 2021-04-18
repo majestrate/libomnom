@@ -10,7 +10,7 @@ namespace omnom
   EntitySearcher::GetHighestEntityID(EntityKind kind, std::function<void(EntityID)> handler)
   {
     (void) kind;
-    (void) handler;
+    handler(EntityID{0});
   }
 
   /// ask all our peers and get the highest entity id
@@ -19,7 +19,7 @@ namespace omnom
   {
     (void) kind;
     (void) id;
-    (void) handler;
+    handler(std::nullopt);
   }
 
 

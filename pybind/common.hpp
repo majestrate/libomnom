@@ -21,4 +21,7 @@ namespace omnom
 
   void
   Peer_Init(py::module & mod);
+
+  void
+  Search_Init(py::module & mod);
 }

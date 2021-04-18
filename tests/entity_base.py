@@ -79,7 +79,7 @@ class Node:
         self._addr = 'tcp://127.0.1.1:{}'.format(self.baseport + node_id)
         self.node_id = node_id
         self._ctx.set_storage_for(TestEntityKind, self._storage)
-        self._ctx.add_entity_handler(TestEntityKind, self.handleGotEntity)
+        self._ctx.gossiper().add_entity_handler(TestEntityKind, self.handleGotEntity)
         self._ctx.listen(self._addr)
 
     def fetch_remote_entity(self, id):
@@ -87,10 +87,13 @@ class Node:
 
     def local_top_id(self):
         return self._storage.GetTopEntityID()
-        
+
+    def remote_top_id(self):
+        return self._ctx.searcher().find_highest_id(TestEntityKind)
+
     def put_entity(self, ent):
         self._storage.StoreEntity(ent)
-        
+
     def stop(self):
         del self._ctx
         self._ctx = None
@@ -125,7 +128,7 @@ class Node:
         self._storage.StoreEntity(ent)
         if peer_filter is None:
             peer_filter = lambda x: True
-        self._ctx.broadcast_entity(ent, peer_filter)
+        self._ctx.gossiper().broadcast_entity(ent, peer_filter)
 
 
     def add_peer(self, addr):

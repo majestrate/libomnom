@@ -8,6 +8,8 @@ PYBIND11_MODULE(pyomnom, mod)
   omnom::Entity_Init(mod);
   omnom::Storage_Init(mod);
   omnom::Peer_Init(mod);
+  omnom::Gossip_Init(mod);
+  omnom::Search_Init(mod);
   mod.def(
     "sleep_ms",
     [](int ms)
