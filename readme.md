@@ -1,6 +1,6 @@
 # libomnom
 
-**O**pen **M**eta **N**etwork **O**verlay **M**esh
+**O**pen **M**eta **N**etworking **O**verlay **M**esh
 
 p2p entity gossip layer atop zmq
 
