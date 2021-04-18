@@ -1,6 +1,6 @@
 #include "handler.hpp"
 
-namespace entsync
+namespace omnom
 {
   EntityHandler::EntityHandler(Context * ctx) : _ctx{ctx} {}
 }

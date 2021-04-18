@@ -10,7 +10,7 @@
 
 #include <unordered_map>
 
-namespace entsync
+namespace omnom
 {
 
   class Context;

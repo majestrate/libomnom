@@ -1,9 +1,9 @@
 #include "common.hpp"
-#include "entsync/peer.hpp"
+#include "omnom/peer.hpp"
 
 #include "oxenmq/hex.h"
 
-namespace entsync
+namespace omnom
 {
   void
   Peer_Init(py::module & mod)

@@ -2,12 +2,12 @@
 #include <thread>
 #include <chrono>
 
-PYBIND11_MODULE(pyentsync, mod)
+PYBIND11_MODULE(pyomnom, mod)
 {
-  entsync::Context_Init(mod);
-  entsync::Entity_Init(mod);
-  entsync::Storage_Init(mod);
-  entsync::Peer_Init(mod);
+  omnom::Context_Init(mod);
+  omnom::Entity_Init(mod);
+  omnom::Storage_Init(mod);
+  omnom::Peer_Init(mod);
   mod.def(
     "sleep_ms",
     [](int ms)

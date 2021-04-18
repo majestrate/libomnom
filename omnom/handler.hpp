@@ -6,14 +6,14 @@
 #include <unordered_map>
 #include <variant>
 
-namespace entsync
+namespace omnom
 {
   class Context;
   
   class EntityHandler
   {
     Context * const _ctx;
-    std::unordered_map<EntityKind, std::function<void(std::variant<uint64_t, CryptoHash>, oxenmq::bt_value)>> m_Handlers;
+    std::unordered_map<EntityKind, std::function<void(Entity)>> m_Handlers;
   public:
     explicit EntityHandler(Context * ctx);
     

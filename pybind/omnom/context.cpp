@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "entsync/context.hpp"
+#include "omnom/context.hpp"
 
-namespace entsync
+namespace omnom
 {
 
   constexpr auto LogPrint =
@@ -39,6 +39,21 @@ namespace entsync
            [](PyContext & self, EntityKind kind, EntityStorage & storage)
            {
              self.Gossip().SetEntityStorage(kind, storage);
+           })
+      .def("search_for_entity",
+           [](PyContext & self, EntityKind kind, EntityID id)
+           {
+             py::gil_scoped_release release;
+             std::promise<std::optional<Entity>> promise;
+             self.Search().
+               MaybeObtainEntityByID(
+                 std::move(kind),
+                 std::move(id),
+                 [&promise](std::optional<Entity> result)
+                 {
+                   promise.set_value(result);
+                 });
+             return promise.get_future().get();
            })
       .def("add_entity_handler",
            [](PyContext & self, EntityKind kind, py::function func)

@@ -4,7 +4,7 @@
 
 #include <oxenmq/hex.h>
 
-namespace entsync
+namespace omnom
 {
   EntityKind::EntityKind(std::string _name, bool _ephemeral) :
     name{std::move(_name)},

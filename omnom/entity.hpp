@@ -6,7 +6,7 @@
 
 #include <oxenmq/bt_value.h>
 
-namespace entsync
+namespace omnom
 {
 
 
@@ -81,20 +81,20 @@ namespace entsync
 namespace std
 {
   template<>
-  struct hash<entsync::EntityKind>
+  struct hash<omnom::EntityKind>
   {
     size_t
-    operator()(const entsync::EntityKind & kind) const
+    operator()(const omnom::EntityKind & kind) const
     {
       return std::hash<decltype(kind.name)>{}(kind.name);
     }
   };
 
   template<>
-  struct hash<entsync::EntityID>
+  struct hash<omnom::EntityID>
   {
     size_t
-    operator()(const entsync::EntityID & id) const
+    operator()(const omnom::EntityID & id) const
     {
       return std::hash<decltype(id.ID)>{}(id.ID);
     }

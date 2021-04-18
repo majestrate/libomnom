@@ -2,7 +2,7 @@
 #include "peer_manager.hpp"
 #include "context.hpp"
 
-namespace entsync
+namespace omnom
 {
   Gossiper::Gossiper(PeerManager * peerManager) : _peerManager{peerManager}
   {
@@ -18,6 +18,43 @@ namespace entsync
       Entity ent{oxenmq::bt_get(msg.data[0])};
       HandleGossip(msg.conn, ent);
     });
+    ctx->AddRequestHandler(
+      "serve",
+      [=](oxenmq::Message & msg)
+      {
+        if(msg.data.size() != 2)
+        {
+          /// TODO: down rank peer
+          msg.send_reply("");
+          return;
+        }
+        EntityKind kind{oxenmq::bt_get(msg.data[0])};
+        EntityID id{oxenmq::bt_get(msg.data[1])};
+
+        CallSafe(
+          [=, defer=msg.send_later()]()
+          {
+            if(const auto maybe = HandleServe(std::move(kind), std::move(id)))
+            {
+              defer.reply(oxenmq::bt_serialize(maybe->to_bt_value()));
+            }
+            else // no such entity
+              defer.reply("");
+          });
+            
+      });
+                           
+  }
+
+  std::optional<Entity>
+  Gossiper::HandleServe(EntityKind kind, EntityID id)
+  {
+    if(auto itr = m_Storage.find(kind); itr != m_Storage.end())
+    {
+      return itr->second.GetEntityByID(id);
+    }
+    else
+      return std::nullopt;
   }
 
   void

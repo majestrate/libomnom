@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <variant>
 
-namespace entsync
+namespace omnom
 {
 
   class Context;

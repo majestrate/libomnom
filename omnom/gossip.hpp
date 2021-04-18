@@ -7,7 +7,7 @@
 #include <functional>
 #include <unordered_map>
 
-namespace entsync
+namespace omnom
 {
 
   class PeerManager;
@@ -26,6 +26,9 @@ namespace entsync
     
     void
     HandleGossip(oxenmq::ConnectionID id, Entity ent);
+
+    std::optional<Entity>
+    HandleServe(EntityKind kind, EntityID id);
     
   public:
     explicit Gossiper(PeerManager * peerManager);

@@ -1,16 +1,16 @@
 
-pybind11_add_module(pyentsync MODULE
+pybind11_add_module(pyomnom MODULE
   module.cpp
-  entsync/context.cpp
-  entsync/entity.cpp
-  entsync/gossip.cpp
-  entsync/peer.cpp
-  entsync/storage.cpp
+  omnom/context.cpp
+  omnom/entity.cpp
+  omnom/gossip.cpp
+  omnom/peer.cpp
+  omnom/storage.cpp
 )
-target_link_libraries(pyentsync PUBLIC entsync)
-target_include_directories(pyentsync PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_options(pyentsync PRIVATE -Wall -Wextra -Werror)
-set_target_properties(pyentsync PROPERTIES
+target_link_libraries(pyomnom PUBLIC omnom)
+target_include_directories(pyomnom PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_options(pyomnom PRIVATE -Wall -Wextra -Werror)
+set_target_properties(pyomnom PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF

@@ -1,7 +1,7 @@
 #include "context.hpp"
 
 
-namespace entsync
+namespace omnom
 {
 
   Context::Context(oxenmq::OxenMQ & lmq, std::string dialect) :

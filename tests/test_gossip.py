@@ -1,7 +1,5 @@
 from entity_base import Swarm, Entity
 
-import time
-
 def test_broadcast_one_seq_toplogy(nodes=20):
     with Swarm(nodes) as swarm:
         swarm.connect_sequentially()
@@ -20,7 +18,7 @@ def test_broadcast_many_random_topology_many_peers(nodes=20, ents=10, peers=5):
         swarm.sleep(1)
 
         for num in range(1, ents):
-            ent = Entity(num, "test data {}".format(num))
+            ent = Entity(num, "test data {} ".format(num) * 1024)
             swarm.nodes[0].broadcast(ent)
 
         swarm.sleep(0.01 * ents)
@@ -34,4 +32,4 @@ def test_broadcast_many_random_topology_many_peers(nodes=20, ents=10, peers=5):
         assert not fail
 
 test_broadcast_one_random_topology_single_peer = lambda : test_broadcast_many_random_topology_many_peers(20, 10, 1)
-test_shit_tons_of_sync = lambda : test_broadcast_many_random_topology_many_peers(20, 1000, 5)
+test_broadcast_1k_blocks = lambda : test_broadcast_many_random_topology_many_peers(20, 1000, 5)

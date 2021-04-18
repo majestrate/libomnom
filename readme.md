@@ -1,6 +1,8 @@
-# entity sync
+# libomnom
 
-p2p entity gossip layer atop lokimq
+**O**pen **M**eta **N**etwork **O**verlay **M**esh
+
+p2p entity gossip layer atop zmq
 
 ## build
 
@@ -9,13 +11,13 @@ depends:
 * cmake
 * pkg-config
 * c++17 compiler
-* lokimq >= 1.2
+* oxenmq >= 1.2
 
 
 clone the source (this is a recursive repo):
 
-    $ git clone --recursive https://github.com/majestrate/entity-sync
-    $ cd entity-sync
+    $ git clone --recursive https://github.com/majestrate/libomnom
+    $ cd libomnom
 
 compile as a library:
 

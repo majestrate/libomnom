@@ -1,6 +1,6 @@
 #include "common.hpp"
-#include "entsync/entity.hpp"
-namespace entsync
+#include "omnom/entity.hpp"
+namespace omnom
 {
   void
   Entity_Init(py::module & mod)
@@ -15,6 +15,10 @@ namespace entsync
       .def("value",
            [](const EntityID & self) -> std::string {
              return self.ToString();
+           })
+      .def("__lt__",
+           [](const EntityID & left, const EntityID & right) {
+             return left.ID < right.ID;
            })
       .def("__repr__",
            [](const EntityID & self) -> std::string

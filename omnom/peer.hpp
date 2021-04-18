@@ -6,7 +6,7 @@
 #include <set>
 #include <functional>
 
-namespace entsync
+namespace omnom
 {
 
   /// a single reachable address on a peer
@@ -32,6 +32,12 @@ namespace entsync
   struct PeerInfo
   {
 
+    /// maybe create a PeerInfo by querying via dns for our lokinet address
+    /// use a custom dnsEndpoint in the format "ip:port" if we dont want to use the system resolver
+    static std::optional<PeerInfo>
+    LokinetPeerInfo(std::optional<std::string> dnsEndpoint=std::nullopt);
+
+    
     PeerInfo() = default;
     PeerInfo(oxenmq::bt_value val);
 
@@ -61,15 +67,15 @@ namespace entsync
     bool outbound;
   };
 
-} // namespace entsync
+} // namespace omnom
 
 namespace std
 {
   template<>
-  struct hash<entsync::PeerInfo>
+  struct hash<omnom::PeerInfo>
   {
     size_t
-    operator()(const entsync::PeerInfo & info) const
+    operator()(const omnom::PeerInfo & info) const
     {
       std::string_view view{reinterpret_cast<const char*>(info.uid.data()), info.uid.size()};
       return std::hash<std::string_view>{}(view);

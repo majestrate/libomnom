@@ -1,7 +1,9 @@
 #pragma once
 #include "entity.hpp"
 
-namespace entsync
+#include <set>
+
+namespace omnom
 {
   class EntityStorage
   {
@@ -21,5 +23,20 @@ namespace entsync
      */
     virtual void
     StoreEntity(Entity ent) = 0;
+
+    
+    /***
+        maybe fetch an entity from our storage given it's id
+     */
+    virtual std::optional<Entity>
+    GetEntityByID(EntityID id) const = 0;
+
+
+    /***
+        get the entity id that is the "highest value"
+    */
+    virtual EntityID
+    GetTopEntityID() const = 0;
+    
   };
 }

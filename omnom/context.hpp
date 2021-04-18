@@ -13,7 +13,7 @@
 #include <variant>
 #include "storage.hpp"
 
-namespace entsync
+namespace omnom
 {
   /// An Entity Sync Context contains all members and components needed to 
   /// synchronize entities to other instances of the context regardless of if it is across network or ipc pipes
@@ -40,6 +40,9 @@ namespace entsync
 
     EntitySearcher &
     Search() { return m_Search; };
+
+    PeerManager &
+    Peers() { return m_Peers; };
     
     /// add a listener to oxenmq on lmqAddr to accept inbound connections
     /// advertise a set of reachable endpoints that it will publish if applicable in order of rank

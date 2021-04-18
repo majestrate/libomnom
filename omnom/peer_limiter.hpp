@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace entsync
+namespace omnom
 {
 
   class PeerLimiter

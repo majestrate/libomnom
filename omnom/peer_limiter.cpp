@@ -1,5 +1,5 @@
 #include "peer_limiter.hpp"
-namespace entsync
+namespace omnom
 {
   using namespace std::literals;
 

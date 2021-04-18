@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-namespace entsync
+namespace omnom
 {
   void
   Context_Init(py::module& mod);

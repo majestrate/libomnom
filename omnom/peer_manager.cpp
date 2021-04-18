@@ -5,7 +5,7 @@
 
 #include "oxenmq/hex.h"
 
-namespace entsync
+namespace omnom
 {
   using namespace std::literals;
 
