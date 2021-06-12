@@ -6,18 +6,18 @@
 
 namespace omnom
 {
-  using CryptoHash = std::array<uint8_t, 32>;
+    using CryptoHash = std::array<uint8_t, 32>;
 }
 
 namespace std
 {
-  template<>
-  struct hash<omnom::CryptoHash>
-  {
-    size_t
-    operator()(const omnom::CryptoHash & h)
+    template <>
+    struct hash<omnom::CryptoHash>
     {
-      return std::hash<std::string_view>{}(std::string_view{reinterpret_cast<const char*>(h.data()), h.size()});
-    }
-  };
-}
+        size_t
+        operator()(const omnom::CryptoHash& h)
+        {
+            return std::hash<std::string_view>{}(std::string_view{reinterpret_cast<const char*>(h.data()), h.size()});
+        }
+    };
+}  // namespace std

@@ -8,18 +8,18 @@
 
 namespace omnom
 {
-  class Context;
-  
-  class EntityHandler
-  {
-    Context * const _ctx;
-    std::unordered_map<EntityKind, std::function<void(Entity)>> m_Handlers;
-  public:
-    explicit EntityHandler(Context * ctx);
-    
-    EntityHandler(const EntityHandler &) = delete;
-    EntityHandler(EntityHandler &&) = delete;
-   
-  };
+    class Context;
 
-}
+    class EntityHandler
+    {
+        Context* const _ctx;
+        std::unordered_map<EntityKind, std::function<void(Entity)>> m_Handlers;
+
+       public:
+        explicit EntityHandler(Context* ctx);
+
+        EntityHandler(const EntityHandler&) = delete;
+        EntityHandler(EntityHandler&&) = delete;
+    };
+
+}  // namespace omnom

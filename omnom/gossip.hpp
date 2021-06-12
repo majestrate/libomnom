@@ -9,52 +9,49 @@
 
 namespace omnom
 {
+    class PeerManager;
+    struct PeerState;
 
-  class PeerManager;
-  struct PeerState;
+    class Gossiper
+    {
+        PeerManager* const _peerManager;
 
-  
-  class Gossiper
-  {
-    PeerManager * const _peerManager;
+        std::unordered_multimap<EntityKind, std::function<void(const PeerState&, Entity)>> m_Handlers;
 
-    std::unordered_multimap<EntityKind, std::function<void(const PeerState&, Entity)>> m_Handlers;
+        std::unordered_map<EntityKind, EntityStorage&> m_Storage;
 
-    std::unordered_map<EntityKind, EntityStorage &> m_Storage;
+        std::optional<oxenmq::TaggedThreadID> m_Logic;
 
-    std::optional<oxenmq::TaggedThreadID> m_Logic;
-    
-    void
-    HandleGossip(oxenmq::ConnectionID id, Entity ent);
+        void
+        HandleGossip(oxenmq::ConnectionID id, Entity ent);
 
-    std::optional<Entity>
-    HandleServe(EntityKind kind, EntityID id);
-    
-  public:
-    explicit Gossiper(PeerManager * peerManager);
-    Gossiper(const Gossiper &) = delete;
-    Gossiper(Gossiper &&) = delete;
+        std::optional<Entity>
+        HandleServe(EntityKind kind, EntityID id);
 
-    void
-    Start();
+       public:
+        explicit Gossiper(PeerManager* peerManager);
+        Gossiper(const Gossiper&) = delete;
+        Gossiper(Gossiper&&) = delete;
 
-    void
-    CallSafe(std::function<void(void)> f) const;
-    
-    /// broadcast an entity to the network
-    void
-    Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID, const PeerState &)> filter=nullptr);
+        void
+        Start();
 
-    /// add a handler to handle new gossiped entities
-    void
-    AddEntityHandler(EntityKind kind, std::function<void(const PeerState &, Entity)> handler);
+        void
+        CallSafe(std::function<void(void)> f) const;
 
-    /// set persistent storage for this kind of entity
-    /// throws std::invalid_argument if entity's kind is ephemeral
-    /// replaces any existing storage
-    void
-    SetEntityStorage(EntityKind kind, EntityStorage & storage);
-    
-  };
-  
-}
+        /// broadcast an entity to the network
+        void
+        Broadcast(Entity ent, std::function<bool(oxenmq::ConnectionID, const PeerState&)> filter = nullptr);
+
+        /// add a handler to handle new gossiped entities
+        void
+        AddEntityHandler(EntityKind kind, std::function<void(const PeerState&, Entity)> handler);
+
+        /// set persistent storage for this kind of entity
+        /// throws std::invalid_argument if entity's kind is ephemeral
+        /// replaces any existing storage
+        void
+        SetEntityStorage(EntityKind kind, EntityStorage& storage);
+    };
+
+}  // namespace omnom
